@@ -1,0 +1,86 @@
+[
+  {
+    "question": "Che cosa fa il gestore dei metodi di accesso?",
+    "answer": "Esegue il piano prodotto dall'ottimizzatore traducendolo in richieste di accesso a blocchi dati o blocchi indice, che poi passano al gestore del buffer."
+  },
+  {
+    "question": "Come e organizzata una pagina fisica in un DBMS?",
+    "answer": "Contiene dati utili e informazioni di controllo: header/trailer, bit di parita, informazioni della struttura fisica e dizionario di pagina per localizzare tuple e attributi."
+  },
+  {
+    "question": "Quando serve il dizionario di pagina e come cresce lo spazio nella pagina?",
+    "answer": "Serve soprattutto per tuple di lunghezza variabile. Dizionario e parte utile crescono come stack opposti, lasciando spazio contiguo centrale disponibile."
+  },
+  {
+    "question": "Quando si riorganizza una pagina?",
+    "answer": "Quando lo spazio totale libero e sufficiente ma non e contiguo. Il DBMS compatta/riorganizza la pagina in memoria centrale e poi inserisce o aggiorna la tupla."
+  },
+  {
+    "question": "Quali sono le strutture primarie di organizzazione dei file?",
+    "answer": "Sequenziale disordinata, sequenziale ad array, sequenziale ordinata, strutture hash e strutture ad albero. La scelta influenza costo di ricerca, inserimento, cancellazione e scansione."
+  },
+  {
+    "question": "Quali sono pro e contro di un file sequenziale disordinato?",
+    "answer": "Inserimento molto efficiente, spesso in coda; ricerca e cancellazione richiedono scansione sequenziale se non ci sono indici."
+  },
+  {
+    "question": "Quali sono pro e contro di un file sequenziale ordinato?",
+    "answer": "Supporta bene ricerche ordinate, range query e operazioni aggregate, ma inserimenti e cancellazioni possono richiedere overflow page, puntatori e riorganizzazioni."
+  },
+  {
+    "question": "Che cos'e un indice primario e quali varianti ha?",
+    "answer": "E un indice la cui chiave di ricerca coincide con la chiave di ordinamento del file. Puo essere denso, con entry per ogni valore di chiave, o sparso, con meno entry tipicamente legate ai blocchi."
+  },
+  {
+    "question": "Come si cerca con indice primario denso e sparso?",
+    "answer": "Nel denso si trova K nell'indice e si segue il puntatore. Nello sparso si cerca la massima chiave minore o uguale a K, si accede al blocco puntato e si scansiona localmente."
+  },
+  {
+    "question": "Come cambiano inserimento e cancellazione in un indice primario?",
+    "answer": "Nel denso si aggiorna l'indice solo quando nasce o sparisce un valore di chiave. Nello sparso si aggiorna quando cambiano i valori rappresentativi dei blocchi o quando un blocco viene creato/eliminato."
+  },
+  {
+    "question": "Che cos'e un indice secondario?",
+    "answer": "E un indice su una chiave di ricerca diversa dall'ordinamento del file. Ogni entry punta a un bucket di puntatori verso tutte le tuple con quel valore."
+  },
+  {
+    "question": "Perche un indice secondario e sempre denso?",
+    "answer": "Perche il file non e ordinato sulla chiave secondaria: per recuperare tutte le tuple con un valore K deve esistere un'entry per ogni valore di ricerca presente."
+  },
+  {
+    "question": "Quali sono le proprieta fondamentali di un B+-tree?",
+    "answer": "E bilanciato, ogni nodo sta in una pagina, ha fan-out elevato, foglie ordinate e collegate. Ricerca, inserimento e cancellazione hanno costo logaritmico in numero di livelli."
+  },
+  {
+    "question": "Che cosa contengono nodi foglia e nodi interni di un B+-tree?",
+    "answer": "Le foglie contengono chiavi e puntatori a tuple o bucket, piu puntatore alla foglia successiva. I nodi interni contengono chiavi separatrici e puntatori ai sottoalberi."
+  },
+  {
+    "question": "Come funziona la ricerca in un B+-tree?",
+    "answer": "Dalla radice si sceglie il puntatore in base agli intervalli determinati dalle chiavi del nodo, fino alla foglia; nella foglia si cerca la chiave e si segue il puntatore ai dati."
+  },
+  {
+    "question": "Quando avviene lo split in un B+-tree?",
+    "answer": "Durante un inserimento, se la foglia o il nodo in cui va inserita la chiave e pieno. Si divide il nodo, si aggiorna il padre e lo split puo propagarsi fino alla radice."
+  },
+  {
+    "question": "Quando avvengono merge o redistribuzione in un B+-tree?",
+    "answer": "Dopo una cancellazione che porta un nodo sotto il riempimento minimo. Se possibile si redistribuiscono chiavi con un fratello, altrimenti si fondono nodi e si aggiorna il padre."
+  },
+  {
+    "question": "Come funziona una struttura hash per accesso ai dati?",
+    "answer": "Una funzione di folding trasforma la chiave in intero e una funzione hash la mappa in un bucket. La ricerca di uguaglianza accede direttamente al bucket calcolato."
+  },
+  {
+    "question": "Come si dimensiona un indice hash statico?",
+    "answer": "Dato T tuple previste, F tuple per blocco e fattore di riempimento f, si stima il numero di bucket come B = ceil(T / (f * F))."
+  },
+  {
+    "question": "Che cosa sono collisioni e overflow nell'hashing?",
+    "answer": "Collisioni sono chiavi diverse nello stesso bucket. Se il bucket si satura si usano bucket di overflow concatenati, peggiorando il costo della ricerca."
+  },
+  {
+    "question": "Quando conviene hash e quando B+-tree?",
+    "answer": "Hash conviene per uguaglianza A = v. B+-tree conviene per range query, ordinamenti, scansioni ordinate e dati che cambiano spesso senza ricostruire la struttura."
+  }
+]

@@ -1,0 +1,132 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Uno schedule serializzabile e:",
+    "answer": "uno schedule concorrente equivalente a uno schedule seriale",
+    "options": ["uno schedule senza commit", "uno schedule concorrente equivalente a uno schedule seriale", "uno schedule con sole letture", "uno schedule che evita sempre l'uso dei lock"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale coppia di operazioni NON e in conflitto?",
+    "answer": "ri(x), rj(x)",
+    "options": ["ri(x), wj(x)", "wi(x), rj(x)", "wi(x), wj(x)", "ri(x), rj(x)"],
+    "correctOptionIndexes": [3],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Uno schedule e CSR se e solo se:",
+    "answer": "il suo grafo dei conflitti e aciclico",
+    "options": ["ha almeno un commit", "il suo grafo dei conflitti e aciclico", "non contiene scritture", "tutte le transazioni leggono lo stesso dato"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Qual e la relazione corretta tra CSR e VSR?",
+    "answer": "CSR e un sottoinsieme proprio di VSR",
+    "options": ["CSR e un sottoinsieme proprio di VSR", "VSR e un sottoinsieme proprio di CSR", "CSR e VSR sono equivalenti", "CSR e VSR non hanno schedule in comune"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In view-serializzabilita, una scrittura finale e:",
+    "answer": "l'ultima scrittura su un dato nello schedule",
+    "options": ["la prima lettura di una transazione", "l'ultima scrittura su un dato nello schedule", "qualsiasi write seguita da abort", "il record C(T) nel log"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "TRUE_FALSE",
+    "prompt": "La verifica generale di VSR e piu costosa della verifica di CSR.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "La regola 2PL stabilisce che una transazione:",
+    "answer": "non puo acquisire nuovi lock dopo aver rilasciato un lock",
+    "options": ["puo usare solo read lock", "non puo acquisire nuovi lock dopo aver rilasciato un lock", "deve rilasciare tutti i lock prima del commit", "non puo mai andare in attesa"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nel 2PL stretto i lock vengono rilasciati:",
+    "answer": "solo dopo commit o rollback",
+    "options": ["subito dopo ogni lettura", "prima di ogni scrittura", "solo dopo commit o rollback", "solo se il dato e dirty"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Un read lock su x e compatibile con:",
+    "answer": "altri read lock su x",
+    "options": ["un write lock di un'altra transazione su x", "altri read lock su x", "qualsiasi write lock", "nessun altro lock"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "TRUE_FALSE",
+    "prompt": "Tutti gli schedule prodotti da transazioni che rispettano 2PL appartengono a CSR.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il wait-for graph viene usato per:",
+    "answer": "rilevare deadlock",
+    "options": ["ottimizzare join", "rilevare deadlock", "calcolare fan-out", "scrivere il log"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Una dirty read avviene quando:",
+    "answer": "una transazione legge un valore scritto da un'altra transazione non ancora committata",
+    "options": ["due transazioni scrivono lo stesso valore finale", "una transazione legge un valore scritto da un'altra transazione non ancora committata", "una query usa un indice hash", "il buffer manager esegue flush"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 13,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale livello di isolamento SQL evita tutte le anomalie considerate negli appunti?",
+    "answer": "SERIALIZABLE",
+    "options": ["READ UNCOMMITTED", "READ COMMITTED", "REPEATABLE READ", "SERIALIZABLE"],
+    "correctOptionIndexes": [3],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

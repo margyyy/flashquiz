@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il gestore dei metodi di accesso riceve un piano di esecuzione e produce:",
+    "answer": "richieste di accesso a blocchi dati o blocchi indice",
+    "options": ["record di commit", "richieste di accesso a blocchi dati o blocchi indice", "statistiche per il data dictionary", "query SQL ottimizzate"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quando si riorganizza una pagina fisica?",
+    "answer": "Quando c'e spazio libero totale sufficiente ma non contiguo",
+    "options": ["Quando il log contiene un checkpoint", "Quando c'e spazio libero totale sufficiente ma non contiguo", "Ogni volta che si legge una tupla", "Solo dopo un commit"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "TRUE_FALSE",
+    "prompt": "Il dizionario di pagina e particolarmente utile con tuple di lunghezza variabile.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In un file sequenziale disordinato, l'operazione piu efficiente tra quelle elencate e tipicamente:",
+    "answer": "inserimento in coda",
+    "options": ["range query ordinata", "inserimento in coda", "ricerca senza indice", "merge scan join"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Un indice primario e definito su una chiave di ricerca che:",
+    "answer": "coincide con la chiave di ordinamento del file",
+    "options": ["non compare mai nel file dati", "coincide con la chiave di ordinamento del file", "deve essere sempre composta", "non puo essere densa"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In un indice primario sparso, per cercare K si usa:",
+    "answer": "l'entry con il massimo valore di chiave minore o uguale a K",
+    "options": ["sempre un bucket di overflow", "l'entry con il massimo valore di chiave minore o uguale a K", "una scansione completa del log", "solo la radice del B+-tree"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "TRUE_FALSE",
+    "prompt": "Gli indici secondari sono sempre densi.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In un indice secondario, il puntatore associato a un valore di chiave punta tipicamente:",
+    "answer": "a un bucket di puntatori verso le tuple con quel valore",
+    "options": ["al record di checkpoint", "a un bucket di puntatori verso le tuple con quel valore", "sempre alla prima pagina del file", "alla query ottimizzata"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale proprieta rende il B+-tree adatto a dati su memoria secondaria?",
+    "answer": "fan-out elevato e pochi livelli",
+    "options": ["fan-out elevato e pochi livelli", "assenza di nodi foglia", "accesso solo sequenziale", "collisioni obbligatorie"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quando avviene uno split in un B+-tree?",
+    "answer": "Quando si deve inserire una chiave in un nodo pieno",
+    "options": ["Quando si legge una chiave assente", "Quando si deve inserire una chiave in un nodo pieno", "Quando il log viene forzato su disco", "Quando due transazioni sono in conflitto"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Dopo una cancellazione in un B+-tree, merge o redistribuzione servono quando:",
+    "answer": "un nodo scende sotto il vincolo di riempimento minimo",
+    "options": ["la chiave cancellata era pari", "un nodo scende sotto il vincolo di riempimento minimo", "la radice contiene troppe query", "il buffer e dirty"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Una struttura hash e preferibile rispetto a un B+-tree soprattutto per:",
+    "answer": "ricerche puntuali di uguaglianza",
+    "options": ["range query", "ordinamenti", "ricerche puntuali di uguaglianza", "merge scan join"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 13,
+    "kind": "TRUE_FALSE",
+    "prompt": "Un indice hash e generalmente adatto alle interrogazioni di intervallo.",
+    "answer": "Falso",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 14,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nell'hashing, i bucket di overflow servono a gestire:",
+    "answer": "collisioni che saturano il bucket di base",
+    "options": ["checkpoint troppo frequenti", "collisioni che saturano il bucket di base", "tuple ordinate per range", "lock condivisi"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

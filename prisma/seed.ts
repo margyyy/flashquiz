@@ -28,6 +28,12 @@ async function main() {
       where: { slug: subject.slug },
     });
 
+    if (subject.slug === "basi-di-dati") {
+      await prisma.cardSet.deleteMany({
+        where: { subjectId: dbSubject.id },
+      });
+    }
+
     for (const set of subject.sets) {
       await prisma.cardSet.upsert({
         where: {

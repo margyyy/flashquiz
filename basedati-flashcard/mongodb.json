@@ -1,0 +1,74 @@
+[
+  {
+    "question": "Quali sono i due pilastri dell'architettura MongoDB distribuita?",
+    "answer": "Replicazione e sharding. La replicazione garantisce disponibilita e resilienza; lo sharding distribuisce dataset e carico su piu server."
+  },
+  {
+    "question": "Che cos'e un replica set?",
+    "answer": "E un insieme di processi mongod che mantengono lo stesso dataset. Ha un primario per le scritture e secondari che replicano asincronamente."
+  },
+  {
+    "question": "Che cos'e l'oplog in MongoDB?",
+    "answer": "E il log delle operazioni di scrittura del primario. I secondari lo leggono e riapplicano operazioni idempotenti per allineare le proprie copie."
+  },
+  {
+    "question": "Come avviene l'elezione del primario?",
+    "answer": "I membri votanti usano un protocollo di consenso ispirato a Raft. Se il primario non e raggiungibile, un secondario qualificato e aggiornato puo essere eletto."
+  },
+  {
+    "question": "Perche conviene un numero dispari di membri votanti nel replica set?",
+    "answer": "Per evitare parita nelle elezioni del primario e ridurre situazioni di stallo."
+  },
+  {
+    "question": "Che ruolo ha un arbitro?",
+    "answer": "Vota nelle elezioni ma non conserva dati e non puo diventare primario. Serve quando si vuole evitare parita senza aggiungere un nodo dati completo."
+  },
+  {
+    "question": "Che cosa sono nodi nascosti e ritardati?",
+    "answer": "Sono secondari non accessibili direttamente dai client, spesso usati per backup/reporting. Se ritardati, replicano con un ritardo configurato e conservano uno storico recente."
+  },
+  {
+    "question": "Che cos'e il write concern?",
+    "answer": "Definisce quante conferme servono per considerare completata una scrittura. Parametri tipici: w, j e wtimeout."
+  },
+  {
+    "question": "Che differenza c'e tra w:1 e w:majority?",
+    "answer": "w:1 richiede conferma dal primario e ha minore latenza; w:majority richiede conferma dalla maggioranza e aumenta garanzia di persistenza."
+  },
+  {
+    "question": "Che cos'e il read concern?",
+    "answer": "Definisce quale stato dei dati puo essere letto: local/available privilegiano disponibilita, majority/linearizable/snapshot aumentano consistenza e isolamento."
+  },
+  {
+    "question": "Che cos'e lo sharding in MongoDB?",
+    "answer": "E la divisione di una collezione in chunk distribuiti su shard diversi, per scalare orizzontalmente storage, letture e scritture."
+  },
+  {
+    "question": "Quali componenti gestiscono un cluster shardato?",
+    "answer": "Shard, mongos e config server. Gli shard tengono i dati, mongos instrada query e aggrega risultati, i config server tengono metadati e mappa dei chunk."
+  },
+  {
+    "question": "Che cos'e una shard key?",
+    "answer": "E l'attributo o insieme di attributi usato per distribuire i documenti nei chunk. La scelta influenza bilanciamento, hotspot e prestazioni delle query."
+  },
+  {
+    "question": "Differenza tra ranged sharding e hashed sharding?",
+    "answer": "Ranged sharding divide per intervalli ed e buono per range query, ma rischia hotspot con chiavi monotone. Hashed sharding distribuisce meglio ma non supporta bene range query."
+  },
+  {
+    "question": "Che cosa fa il balancer?",
+    "answer": "Redistribuisce chunk tra shard per mantenere carico e spazio il piu possibile bilanciati, rispettando la localita quando prevista."
+  },
+  {
+    "question": "Quando mongos fa targeting e quando broadcast?",
+    "answer": "Se la query contiene la shard key puo inviarla solo agli shard interessati; senza shard key spesso deve inviarla a molti o tutti gli shard."
+  },
+  {
+    "question": "Come si crea un indice univoco in MongoDB?",
+    "answer": "Con createIndex sulla collection: db.collection.createIndex({ campo: 1 }, { unique: true }). La proprieta unique va nelle opzioni, non nella specifica delle chiavi."
+  },
+  {
+    "question": "Come si collegano proprieta ACID e MongoDB?",
+    "answer": "Le operazioni su singolo documento sono atomiche. Consistenza, isolamento e persistenza dipendono da replica, read concern, write concern, sessioni/transazioni e write-ahead logging."
+  }
+]

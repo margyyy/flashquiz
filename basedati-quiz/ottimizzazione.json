@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "L'ottimizzazione algebrica di una query e principalmente:",
+    "answer": "indipendente dal modello di costo",
+    "options": ["basata solo sul numero di pagine", "indipendente dal modello di costo", "eseguita dopo il recovery", "applicabile solo a MongoDB"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale riscrittura riduce presto il numero di tuple elaborate?",
+    "answer": "Anticipo delle selezioni",
+    "options": ["Anticipo delle selezioni", "Posticipo delle selezioni", "Rimozione degli indici", "Aggiunta di overflow bucket"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il costo di una scansione sequenziale della relazione R e:",
+    "answer": "NP(R)",
+    "options": ["NR(R)", "NP(R)", "VAL(A,R)", "CARD(R) * VAL(A,R)"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Lo Z-way Sort-Merge e usato quando:",
+    "answer": "l'ordinamento deve essere eseguito su memoria secondaria con buffer limitati",
+    "options": ["si deve fare solo una ricerca hash", "l'ordinamento deve essere eseguito su memoria secondaria con buffer limitati", "si vuole evitare qualunque scrittura temporanea", "si controllano deadlock"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "TRUE_FALSE",
+    "prompt": "Nel sort-merge esterno, ogni passo di merge legge e riscrive le pagine coinvolte.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Per una selezione A = v, quali indici sono adatti secondo gli appunti?",
+    "answer": "Hash o B+-tree",
+    "options": ["Solo indice secondario sparso", "Hash o B+-tree", "Solo file sequenziale disordinato", "Solo wait-for graph"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Per una selezione A >= v1 AND A <= v2, l'indice piu appropriato e:",
+    "answer": "B+-tree su A",
+    "options": ["Hash su A", "B+-tree su A", "Nessun indice puo mai essere usato", "Indice hash multiattributo obbligatorio"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Con una congiunzione A = v1 AND B = v2 e indici separati, la scelta base degli appunti e:",
+    "answer": "usare l'indice della condizione piu selettiva e verificare l'altra sui dati ottenuti",
+    "options": ["non usare mai indici", "usare l'indice della condizione piu selettiva e verificare l'altra sui dati ottenuti", "usare sempre entrambi gli indici senza costo", "usare solo hash se A e B sono numerici"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nel Nested-Loop Join semplice con R esterna e S interna, il costo base e:",
+    "answer": "NP(R) + NR(R) * NP(S)",
+    "options": ["NP(R) + NP(S)", "NP(R) + NR(R) * NP(S)", "NR(R) + NR(S)", "VAL(R,S)"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nel Block Nested-Loop Join, S interna viene scandita:",
+    "answer": "una volta per ogni pagina della relazione esterna R",
+    "options": ["una volta per ogni tupla di R", "una volta per ogni pagina della relazione esterna R", "una sola volta in totale", "una volta per ogni valore distinto di join"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il Merge-Scan Join e applicabile quando:",
+    "answer": "gli input sono ordinati sugli attributi di join e il predicato e un equi-join",
+    "options": ["gli input sono ordinati sugli attributi di join e il predicato e un equi-join", "non esistono mai indici", "il join e sempre theta-join arbitrario", "si lavora solo su un documento MongoDB"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nel caso migliore, con input gia ordinati, il costo del Merge-Scan Join e circa:",
+    "answer": "NP(R) + NP(S)",
+    "options": ["NP(R) + NP(S)", "NR(R) * NP(S)", "NP(R) * NP(S)", "VAL(A,R) + VAL(A,S)"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 13,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "L'Hash Join e applicabile principalmente a:",
+    "answer": "equi-join",
+    "options": ["range query", "equi-join", "ordinamenti finali", "dirty read"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 14,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "La scelta finale del piano di esecuzione usa soprattutto:",
+    "answer": "stime di costo basate sulle statistiche del data dictionary",
+    "options": ["stime di costo basate sulle statistiche del data dictionary", "solo l'ordine scritto dall'utente nella query", "il numero di transazioni in deadlock", "la dimensione del file di log"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

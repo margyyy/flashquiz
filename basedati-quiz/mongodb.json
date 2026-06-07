@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "I due concetti fondamentali dell'architettura MongoDB distribuita sono:",
+    "answer": "replicazione e sharding",
+    "options": ["trigger e viste", "replicazione e sharding", "checkpoint e WAL", "CSR e VSR"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In un replica set MongoDB, il nodo primario:",
+    "answer": "gestisce le scritture e registra le operazioni nell'oplog",
+    "options": ["non puo ricevere scritture", "gestisce le scritture e registra le operazioni nell'oplog", "mantiene solo metadati di sharding", "serve solo per votare"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "L'oplog in MongoDB e:",
+    "answer": "il log delle operazioni usato dai secondari per replicare le scritture",
+    "options": ["un indice B+-tree", "il log delle operazioni usato dai secondari per replicare le scritture", "un config server", "una shard key composta"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "TRUE_FALSE",
+    "prompt": "Le operazioni contenute nell'oplog devono essere idempotenti.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Perche e consigliabile un numero dispari di membri votanti in un replica set?",
+    "answer": "Per evitare parita nelle elezioni del primario",
+    "options": ["Per evitare parita nelle elezioni del primario", "Per disabilitare l'oplog", "Per impedire lo sharding", "Per rendere obbligatorio readConcern local"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Un arbitro in MongoDB:",
+    "answer": "vota nelle elezioni ma non conserva una copia del dataset",
+    "options": ["puo diventare primario", "vota nelle elezioni ma non conserva una copia del dataset", "instrada tutte le query", "contiene i chunk piu grandi"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il write concern w:majority richiede che:",
+    "answer": "la maggioranza dei nodi confermi la scrittura",
+    "options": ["solo il client confermi la query", "la maggioranza dei nodi confermi la scrittura", "tutti i nodi siano config server", "la lettura venga fatta solo sul secondario"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale read concern restituisce dati confermati dalla maggioranza dei nodi?",
+    "answer": "majority",
+    "options": ["local", "available", "majority", "nearest"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In un cluster shardato, mongos:",
+    "answer": "instrada le query verso gli shard e consolida i risultati",
+    "options": ["contiene solo dati utente", "instrada le query verso gli shard e consolida i risultati", "e un tipo di indice univoco", "sostituisce l'oplog"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "La shard key serve a:",
+    "answer": "distribuire i documenti in chunk tra gli shard",
+    "options": ["scegliere il nodo primario", "distribuire i documenti in chunk tra gli shard", "definire il dirty bit", "ordinare il file di log"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Ranged sharding e preferibile quando:",
+    "answer": "sono importanti query su intervalli della shard key",
+    "options": ["sono importanti query su intervalli della shard key", "si vogliono distruggere gli ordinamenti", "non esiste una shard key", "si vuole evitare mongos"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Hashed sharding tende a:",
+    "answer": "distribuire meglio valori simili ma peggiorare le range query",
+    "options": ["mantenere valori vicini nello stesso chunk", "distribuire meglio valori simili ma peggiorare le range query", "eliminare il bisogno di config server", "rendere ogni query una transazione ACID"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 13,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale sintassi crea correttamente un indice univoco su email in MongoDB?",
+    "answer": "db.utenti.createIndex({ email: 1 }, { unique: true })",
+    "options": ["db.utenti.createIndex({ email: 1 }, { unique: true })", "db.utenti.createIndex({ email: 1, unique: 1 })", "db.create.index(email, unique)", "db.utenti.uniqueIndex(email: true)"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 14,
+    "kind": "TRUE_FALSE",
+    "prompt": "In MongoDB le operazioni su un singolo documento sono atomiche anche se coinvolgono sottodocumenti o array.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

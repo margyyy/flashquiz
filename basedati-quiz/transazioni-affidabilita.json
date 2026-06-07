@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale coppia di proprieta ACID e garantita principalmente dal gestore dell'affidabilita?",
+    "answer": "Atomicita e persistenza",
+    "options": ["Atomicita e persistenza", "Isolamento e ottimizzazione", "Consistenza e ordinamento", "Privatezza e indipendenza logica"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale operazione NON appartiene ai compiti del gestore dell'affidabilita?",
+    "answer": "Scegliere il piano di esecuzione meno costoso per una query",
+    "options": ["Gestire il file di LOG", "Eseguire recovery dopo un guasto", "Scegliere il piano di esecuzione meno costoso per una query", "Garantire il redo delle transazioni committate"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "TRUE_FALSE",
+    "prompt": "La regola WAL richiede che il record di log sia scritto prima della modifica corrispondente sulla base di dati.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Se un guasto avviene dopo la scrittura sincrona del record C(T), la transazione T:",
+    "answer": "deve essere rifatta se i suoi effetti non sono ancora presenti stabilmente nella base di dati",
+    "options": ["deve sempre essere annullata", "deve essere ignorata perche il commit e perso", "deve essere rifatta se i suoi effetti non sono ancora presenti stabilmente nella base di dati", "viene spostata nell'insieme UNDO"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale record di LOG contiene before state e after state?",
+    "answer": "U(T,O,BS,AS)",
+    "options": ["B(T)", "C(T)", "U(T,O,BS,AS)", "CK(T1,...,Tn)"],
+    "correctOptionIndexes": [2],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Durante la ripresa a caldo, da dove si parte per ridurre il tratto di LOG da analizzare?",
+    "answer": "Dal piu recente record di checkpoint",
+    "options": ["Dal primo record B(T) del log", "Dal piu recente record di checkpoint", "Dal primo record di abort", "Dal record di commit piu vecchio"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In una ripresa a caldo, una transazione attiva al checkpoint e mai committata prima del guasto finisce in:",
+    "answer": "UNDO",
+    "options": ["REDO", "UNDO", "DUMP", "Buffer libero"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "TRUE_FALSE",
+    "prompt": "La ripresa a freddo si usa per un guasto di dispositivo e riparte da un DUMP piu il LOG.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale primitiva salva sincronicamente una pagina su memoria secondaria?",
+    "answer": "force",
+    "options": ["fix", "setDirty", "unfix", "force", "flush"],
+    "correctOptionIndexes": [3],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Il dirty bit di una pagina del buffer indica che:",
+    "answer": "la pagina in memoria centrale e stata modificata rispetto alla copia su disco",
+    "options": ["la pagina e libera", "la pagina in memoria centrale e stata modificata rispetto alla copia su disco", "la pagina contiene solo record di log", "la pagina non puo essere scritta su disco"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale primitiva segnala al gestore del buffer che una pagina e stata modificata?",
+    "answer": "setDirty",
+    "options": ["fix", "setDirty", "unfix", "checkpoint"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "TRUE_FALSE",
+    "prompt": "Il flush e una scrittura asincrona usata per salvare pagine dirty e liberare spazio nel buffer.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

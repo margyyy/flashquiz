@@ -1,0 +1,110 @@
+[
+  {
+    "question": "Domanda d'esame: illustrare le proprieta delle transazioni e indicare quali moduli del DBMS le garantiscono.",
+    "answer": "ACID: atomicita, consistenza, isolamento, persistenza. Affidabilita: atomicita e persistenza; concorrenza: isolamento e correttezza concorrente; vincoli/metodi d'accesso: supporto alla consistenza."
+  },
+  {
+    "question": "Domanda d'esame: descrivere il gestore del buffer nell'architettura DBMS.",
+    "answer": "Gestisce pagine in memoria centrale, usa fix/unfix/setDirty/force/flush, dirty bit e contatore di uso. Riduce accessi a disco sfruttando localita e scritture differite."
+  },
+  {
+    "question": "Domanda d'esame: quale compito NON e del gestore dell'affidabilita?",
+    "answer": "Ottimizzare query o scegliere piani di esecuzione. Il gestore dell'affidabilita gestisce LOG, WAL, checkpoint, recovery, UNDO/REDO, atomicita e persistenza."
+  },
+  {
+    "question": "Domanda d'esame: illustrare l'algoritmo di ripresa a caldo.",
+    "answer": "Dopo guasto di sistema si parte dall'ultimo checkpoint, si inizializza UNDO con le transazioni attive, si percorre il log in avanti spostando i commit in REDO, poi si eseguono REDO e UNDO."
+  },
+  {
+    "question": "Domanda d'esame: spiegare indice primario denso e sparso.",
+    "answer": "Primario significa chiave di ricerca uguale alla chiave di ordinamento del file. Denso: entry per ogni valore. Sparso: entry rappresentative dei blocchi, ricerca del massimo valore <= K e scansione locale."
+  },
+  {
+    "question": "Domanda d'esame: spiegare l'indice secondario.",
+    "answer": "Ha chiave di ricerca diversa dalla chiave di ordinamento del file. E sempre denso e usa entry <valore, puntatore a bucket> per raggiungere tutte le tuple con quel valore."
+  },
+  {
+    "question": "Domanda d'esame: illustrare B+-tree, ricerca, inserimento e cancellazione.",
+    "answer": "B+-tree e bilanciato, con nodi su pagine e foglie collegate. Ricerca scende dalla radice alla foglia; inserimento puo causare split; cancellazione puo causare redistribuzione o merge."
+  },
+  {
+    "question": "Domanda d'esame: illustrare hash come struttura di accesso.",
+    "answer": "Una funzione hash mappa la chiave in un bucket. Ricerca/inserimento/cancellazione sono efficienti per uguaglianza; collisioni e overflow peggiorano il costo. Non e adatto a range query."
+  },
+  {
+    "question": "Domanda d'esame: quando usare B+-tree e quando hash?",
+    "answer": "Hash per uguaglianza A = v. B+-tree per range query, ordinamento, scansioni ordinate e dati soggetti a variazioni frequenti."
+  },
+  {
+    "question": "Domanda d'esame: data WHERE A >= v1 AND A <= v2, quale indice e corretto?",
+    "answer": "Serve un B+-tree su A. Se tra le opzioni manca B+-tree semplice e compare solo B+-tree multiattributo, la domanda e formulata male: il punto teorico e che per intervalli serve B+-tree, non hash."
+  },
+  {
+    "question": "Domanda d'esame: definire view-equivalenza e scrittura finale.",
+    "answer": "Due schedule sono view-equivalenti se hanno le stesse relazioni legge-da e le stesse scritture finali. Una scrittura finale e l'ultima scrittura su un dato nello schedule."
+  },
+  {
+    "question": "Domanda d'esame: definire conflict-equivalenza e CSR.",
+    "answer": "Due schedule sono conflict-equivalenti se preservano l'ordine di tutte le coppie in conflitto. Uno schedule e CSR se e conflict-equivalente a uno schedule seriale."
+  },
+  {
+    "question": "Domanda d'esame: come verificare se uno schedule e CSR?",
+    "answer": "Costruisci il grafo dei conflitti: nodi transazioni, archi dalle precedenze imposte dai conflitti. Lo schedule e CSR se il grafo e aciclico."
+  },
+  {
+    "question": "Domanda d'esame: qual e la relazione tra CSR e VSR?",
+    "answer": "CSR e un sottoinsieme proprio di VSR. Tutto cio che e CSR e anche VSR, ma esistono schedule VSR non CSR."
+  },
+  {
+    "question": "Domanda d'esame: illustrare 2PL e 2PL stretto.",
+    "answer": "2PL vieta acquisire nuovi lock dopo averne rilasciato uno. 2PL stretto rilascia i lock solo dopo commit/rollback, evitando dirty read e rollback a catena."
+  },
+  {
+    "question": "Domanda d'esame: nel Block Nested-Loop Join, quante volte si scandisce S interna?",
+    "answer": "Una volta per ogni pagina della relazione esterna R, non per ogni tupla. Il costo base e NP(R) + NP(R) * NP(S)."
+  },
+  {
+    "question": "Domanda d'esame: illustrare Z-way Sort-Merge.",
+    "answer": "Prima crea run ordinate con sort interno, poi fonde Z run alla volta usando buffer di input e output. Il costo dipende dai passi di merge; nel caso 2-way e circa 2*NP*(log2(NP)+1)."
+  },
+  {
+    "question": "Domanda d'esame: come si sceglie un piano di esecuzione?",
+    "answer": "Si generano piani alternativi variando ordine degli operatori e metodi fisici, si stimano i costi con statistiche del data dictionary e si sceglie il costo minimo."
+  },
+  {
+    "question": "Domanda d'esame: cos'e l'oplog in MongoDB?",
+    "answer": "E il log delle operazioni di scrittura del primario. I nodi secondari lo usano per replicare asincronamente le modifiche al dataset."
+  },
+  {
+    "question": "Domanda d'esame: perche avere numero dispari di membri votanti in un replica set?",
+    "answer": "Per evitare parita nelle elezioni del primario e ridurre situazioni di stallo."
+  },
+  {
+    "question": "Domanda d'esame: illustrare lo sharding in MongoDB.",
+    "answer": "Lo sharding divide una collezione in chunk distribuiti su shard. Usa shard key, mongos per instradare query e config server per metadati. Serve per scalabilita orizzontale."
+  },
+  {
+    "question": "Domanda d'esame: come si crea un indice univoco in MongoDB?",
+    "answer": "Sintassi corretta: db.collection.createIndex({ campo: 1 }, { unique: true }). Esempio: db.utenti.createIndex({ email: 1 }, { unique: true })."
+  },
+  {
+    "question": "Domanda d'esame: CREATE TABLE con tabella A che ha FOREIGN KEY verso B, ma B viene creata dopo A: e corretto?",
+    "answer": "In generale no: la tabella referenziata B deve esistere quando si crea il vincolo. Soluzione: creare prima B, poi A, oppure aggiungere la FOREIGN KEY dopo con ALTER TABLE."
+  },
+  {
+    "question": "Domanda d'esame: come si crea una chiave primaria e una superchiave in SQL?",
+    "answer": "PRIMARY KEY definisce la chiave primaria e implica NOT NULL. UNIQUE definisce una superchiave: impedisce duplicati su un attributo o insieme di attributi, ma non e la chiave primaria."
+  },
+  {
+    "question": "Domanda d'esame: che cosa significa NUMERIC(10)?",
+    "answer": "NUMERIC(precisione, scala) ha precisione totale e scala decimale. NUMERIC(10) equivale a precisione 10 e scala 0: al massimo 10 cifre totali, senza parte frazionaria."
+  },
+  {
+    "question": "Domanda d'esame: quando si fa split in una struttura ad albero come B+-tree?",
+    "answer": "Quando un inserimento deve entrare in un nodo pieno. Il nodo viene diviso, il padre aggiornato e lo split puo propagarsi verso la radice."
+  },
+  {
+    "question": "Domanda d'esame: quando si fa riorganizzazione di memoria non contigua in una pagina?",
+    "answer": "Quando una pagina ha spazio libero totale sufficiente ma frammentato. Il DBMS compatta la pagina per ottenere spazio contiguo e poi completa inserimento o aggiornamento."
+  }
+]

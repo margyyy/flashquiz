@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale affermazione descrive correttamente NUMERIC(10) in SQL/PostgreSQL?",
+    "answer": "Ha precisione 10 e scala 0: al massimo 10 cifre totali senza parte frazionaria",
+    "options": ["Ha precisione 10 e scala 0: al massimo 10 cifre totali senza parte frazionaria", "Ha un numero arbitrario di decimali ma al massimo 10 cifre intere", "Ha sempre 10 cifre dopo la virgola", "E equivalente a REAL"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 2,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Una tabella A ha una FOREIGN KEY verso B. Se B non esiste ancora quando si crea A con il vincolo, cosa e corretto?",
+    "answer": "Bisogna creare prima B oppure aggiungere il vincolo dopo con ALTER TABLE",
+    "options": ["La creazione e sempre corretta", "Bisogna creare prima B oppure aggiungere il vincolo dopo con ALTER TABLE", "L'errore dipende solo dalla mancanza della dimensione degli attributi", "Le FOREIGN KEY non richiedono tabelle referenziate"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 3,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "In SQL, quale vincolo esprime che un insieme di attributi e una superchiave?",
+    "answer": "UNIQUE",
+    "options": ["DEFAULT", "UNIQUE", "FOREIGN KEY", "CHECK sempre nullo"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 4,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Per una chiave primaria composta da nome e cognome, la sintassi corretta e:",
+    "answer": "PRIMARY KEY(nome, cognome)",
+    "options": ["nome PRIMARY KEY, cognome PRIMARY KEY", "PRIMARY KEY(nome, cognome)", "UNIQUE nome AND cognome", "FOREIGN KEY(nome, cognome)"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 5,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale opzione e piu corretta per WHERE A >= v1 AND A <= v2?",
+    "answer": "Usare un indice B+-tree sull'attributo A",
+    "options": ["Usare un indice B+-tree sull'attributo A", "Usare un indice hash su A", "Non si puo mai usare un indice", "Usare un wait-for graph"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 6,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale risposta e corretta sulla relazione tra CSR e VSR?",
+    "answer": "CSR e un sottoinsieme di VSR",
+    "options": ["Sono equivalenti", "CSR e un sottoinsieme di VSR", "VSR e un sottoinsieme di CSR", "Non hanno schedule in comune"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 7,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Nel Block Nested-Loop Join, quante volte viene ripetuta la scansione della tabella interna S?",
+    "answer": "Per il numero di pagine della tabella esterna R",
+    "options": ["Per il numero di pagine della tabella esterna R", "Per il numero di tuple della tabella esterna R", "Una volta per ogni valore distinto della chiave", "Mai, perche usa solo hash"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 8,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale risposta definisce correttamente una scrittura finale nella view-serializzabilita?",
+    "answer": "L'ultima scrittura su un certo dato nello schedule",
+    "options": ["La prima scrittura di ogni transazione", "L'ultima scrittura su un certo dato nello schedule", "La scrittura immediatamente dopo un read", "Il commit scritto nel LOG"],
+    "correctOptionIndexes": [1],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 9,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale risposta e corretta sull'oplog di MongoDB?",
+    "answer": "Registra le operazioni di scrittura replicate dai nodi secondari",
+    "options": ["Registra le operazioni di scrittura replicate dai nodi secondari", "E la shard key predefinita", "E un indice univoco", "E il file dei piani di esecuzione SQL"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 10,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Perche un replica set dovrebbe avere un numero dispari di membri votanti?",
+    "answer": "Per gestire le situazioni di parita nelle elezioni del primario",
+    "options": ["Per gestire le situazioni di parita nelle elezioni del primario", "Per aumentare la dimensione dei documenti oltre 16MB", "Per disabilitare i secondari", "Per rendere inutili i write concern"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 11,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale comando crea un indice univoco MongoDB sul campo marco?",
+    "answer": "db.collection.createIndex({ marco: 1 }, { unique: true })",
+    "options": ["db.collection.createIndex({ marco: 1 }, { unique: true })", "db.collection.createIndex({ marco: 1, unique: 1 })", "db.create.index({ marco: 1, unique: 1 })", "db.collection.unique({ marco: 1 })"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 12,
+    "kind": "TRUE_FALSE",
+    "prompt": "Lo split in un B+-tree puo propagarsi fino alla radice.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 13,
+    "kind": "TRUE_FALSE",
+    "prompt": "Se in una pagina c'e spazio totale sufficiente ma non contiguo, il DBMS puo riorganizzare la pagina prima dell'inserimento.",
+    "answer": "Vero",
+    "options": ["Vero", "Falso"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  },
+  {
+    "id": 14,
+    "kind": "MULTIPLE_CHOICE",
+    "prompt": "Quale argomento e comparso ricorrentemente nelle domande teoriche d'esame su MongoDB?",
+    "answer": "Sharding: scopo, implementazione e componenti",
+    "options": ["Sharding: scopo, implementazione e componenti", "XML Schema di MongoDB", "Deadlock nel replica set", "Z-way sort-merge in BSON"],
+    "correctOptionIndexes": [0],
+    "allowMultiple": false,
+    "explanation": null
+  }
+]

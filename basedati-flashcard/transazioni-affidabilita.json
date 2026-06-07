@@ -1,0 +1,58 @@
+[
+  {
+    "question": "Che cos'e una transazione e quali proprieta ACID deve garantire un DBMS?",
+    "answer": "Una transazione e un'unita di lavoro che termina con commit o rollback. Le proprieta ACID sono: atomicita, consistenza, isolamento e persistenza."
+  },
+  {
+    "question": "Quali moduli del DBMS contribuiscono alle proprieta delle transazioni?",
+    "answer": "Il gestore dell'affidabilita garantisce atomicita e persistenza; il gestore della concorrenza garantisce isolamento e correttezza dell'esecuzione concorrente; vincoli e metodi d'accesso contribuiscono alla consistenza."
+  },
+  {
+    "question": "Qual e il ruolo del gestore del buffer?",
+    "answer": "Gestisce il trasferimento di pagine tra memoria secondaria e memoria centrale. Tiene nel buffer blocchi usati di recente, sfrutta la localita e decide quando caricare, scrivere o liberare pagine."
+  },
+  {
+    "question": "Quali informazioni mantiene il buffer manager per ogni pagina?",
+    "answer": "Mantiene il blocco contenuto, un contatore di utilizzo/fix e un dirty bit che indica se la copia in memoria e diversa da quella su disco."
+  },
+  {
+    "question": "Cosa fanno le primitive fix, setDirty, unfix, force e flush?",
+    "answer": "fix carica o localizza un blocco e restituisce la pagina; setDirty marca la pagina modificata; unfix decrementa l'uso; force scrive sincronicamente su disco; flush scrive asincronicamente pagine dirty."
+  },
+  {
+    "question": "Che cos'e il LOG e perche e necessario?",
+    "answer": "Il LOG e un archivio persistente in memoria stabile che registra operazioni di transazione e di sistema. Serve per eseguire UNDO delle transazioni non concluse e REDO di quelle committate."
+  },
+  {
+    "question": "Quali record di transazione compaiono nel LOG?",
+    "answer": "B(T) per begin, C(T) per commit, A(T) per abort, I(T,O,AS) per insert, D(T,O,BS) per delete e U(T,O,BS,AS) per update."
+  },
+  {
+    "question": "Come funzionano UNDO e REDO sui record del LOG?",
+    "answer": "UNDO ripristina il before state oppure annulla insert/delete; REDO riapplica l'after state oppure riesegue insert/delete per portare il database allo stato committato."
+  },
+  {
+    "question": "Che differenza c'e tra record DUMP e record CHECKPOINT?",
+    "answer": "DUMP identifica una copia consistente della base di dati. CHECKPOINT registra un punto recente del log e le transazioni attive, riducendo il tratto di log da analizzare nel recovery."
+  },
+  {
+    "question": "Che cosa impone la regola WAL?",
+    "answer": "Write-Ahead Log: i record di log devono essere scritti prima delle corrispondenti modifiche alla base di dati, cosi e sempre possibile fare UNDO."
+  },
+  {
+    "question": "Quando una transazione diventa definitivamente committata?",
+    "answer": "Quando il record C(T) viene scritto in modo sincrono sul LOG. Un guasto prima del commit porta a UNDO; un guasto dopo il commit richiede REDO se le modifiche non sono ancora su disco."
+  },
+  {
+    "question": "Quando si usa la ripresa a caldo e qual e l'algoritmo?",
+    "answer": "Si usa dopo un guasto di sistema con perdita della memoria centrale. Si parte dall'ultimo checkpoint, si costruiscono UNDO e REDO leggendo il log in avanti, poi si rifanno i committati e si disfano i non committati."
+  },
+  {
+    "question": "Quando si usa la ripresa a freddo?",
+    "answer": "Si usa dopo un guasto di dispositivo con perdita di parte della memoria secondaria. Si ripristina dal dump, si riapplica il log dalla posizione del dump e poi si esegue una ripresa a caldo."
+  },
+  {
+    "question": "Quali compiti NON appartengono al gestore dell'affidabilita?",
+    "answer": "Non ottimizza le query e non sceglie piani di esecuzione. Si occupa di log, recovery, atomicita e persistenza, non di ottimizzazione."
+  }
+]

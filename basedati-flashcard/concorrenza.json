@@ -1,0 +1,82 @@
+[
+  {
+    "question": "Perche un DBMS esegue transazioni in modo concorrente?",
+    "answer": "Per aumentare throughput e sfruttare CPU/I/O. Senza controllo, pero, l'interleaving puo produrre anomalie rispetto a una corretta esecuzione seriale."
+  },
+  {
+    "question": "Quali anomalie di concorrenza bisogna riconoscere?",
+    "answer": "Lost update, non-repeatable read, dirty read, phantom update e phantom insert. Sono effetti di letture/scritture intercalate senza adeguato isolamento."
+  },
+  {
+    "question": "Che cos'e uno schedule?",
+    "answer": "E una sequenza di operazioni read/write/commit/abort di transazioni concorrenti che preserva l'ordine interno di ogni transazione."
+  },
+  {
+    "question": "Che differenza c'e tra schedule seriale e serializzabile?",
+    "answer": "Uno schedule seriale non interleava transazioni. Uno schedule serializzabile puo essere concorrente ma produce lo stesso effetto di almeno uno schedule seriale."
+  },
+  {
+    "question": "Che cos'e l'ipotesi commit-proiezione?",
+    "answer": "Nell'analisi teorica si considerano solo transazioni che fanno commit e si assume noto l'esito. E una semplificazione non valida nei sistemi reali."
+  },
+  {
+    "question": "Che cosa significa relazione legge-da nella view-serializzabilita?",
+    "answer": "ri(x) legge da wj(x) se wj(x) precede ri(x) e non ci sono altre scritture su x tra le due. Indica quale transazione ha prodotto il valore letto."
+  },
+  {
+    "question": "Che cos'e una scrittura finale?",
+    "answer": "Una scrittura wi(x) e finale se e l'ultima scrittura sul dato x nello schedule. La view-equivalenza deve preservare anche queste scritture."
+  },
+  {
+    "question": "Quando due schedule sono view-equivalenti?",
+    "answer": "Quando hanno le stesse relazioni legge-da e le stesse scritture finali per ogni oggetto."
+  },
+  {
+    "question": "Quando uno schedule e VSR?",
+    "answer": "Quando e view-equivalente a uno schedule seriale. La verifica generale e costosa, tipicamente esponenziale."
+  },
+  {
+    "question": "Quando due operazioni sono in conflitto?",
+    "answer": "Quando appartengono a transazioni diverse, accedono allo stesso oggetto e almeno una e una scrittura: RW, WR o WW."
+  },
+  {
+    "question": "Quando due schedule sono conflict-equivalenti?",
+    "answer": "Quando contengono le stesse operazioni e mantengono lo stesso ordine per ogni coppia di operazioni in conflitto."
+  },
+  {
+    "question": "Come si verifica la conflict-serializzabilita?",
+    "answer": "Si costruisce il grafo dei conflitti: nodi = transazioni, archi = precedenze imposte dai conflitti. Lo schedule e CSR se e solo se il grafo e aciclico."
+  },
+  {
+    "question": "Qual e la relazione tra CSR e VSR?",
+    "answer": "CSR e un sottoinsieme proprio di VSR: tutti gli schedule CSR sono VSR, ma alcuni schedule VSR non sono CSR."
+  },
+  {
+    "question": "Che cosa impone il Two-Phase Locking?",
+    "answer": "Una transazione non puo acquisire nuovi lock dopo aver rilasciato un lock. Ha una fase di acquisizione e una fase di rilascio."
+  },
+  {
+    "question": "Che differenza c'e tra lock condiviso e lock esclusivo?",
+    "answer": "Un read lock e condiviso: piu transazioni possono leggere. Un write lock e esclusivo: impedisce ad altre transazioni di leggere o scrivere la risorsa."
+  },
+  {
+    "question": "Che cos'e il 2PL stretto?",
+    "answer": "E una variante in cui i lock sono rilasciati solo dopo commit o rollback. Evita letture sporche e rollback a catena ed e adatta ai DBMS reali."
+  },
+  {
+    "question": "Qual e la relazione tra 2PL, CSR e VSR?",
+    "answer": "2PL e sottoinsieme di CSR, e CSR e sottoinsieme di VSR. Quindi 2PL garantisce CSR, ma non tutti gli schedule CSR rispettano 2PL."
+  },
+  {
+    "question": "Che cos'e un deadlock e come si gestisce?",
+    "answer": "E un ciclo di attese tra transazioni. Si gestisce con timeout, prevenzione conservativa o rilevamento tramite wait-for graph e abort di una vittima."
+  },
+  {
+    "question": "Che cos'e la starvation e come si evita?",
+    "answer": "E l'attesa indefinita di una transazione. Un caso tipico e un write lock bloccato da nuovi read lock continui; si evita sospendendo nuovi read lock quando uno scrittore e in attesa."
+  },
+  {
+    "question": "Come si collegano i livelli di isolamento SQL alle anomalie?",
+    "answer": "Serializable evita tutte le anomalie; Repeatable Read evita letture inconsistenti ma puo permettere inserimenti fantasma; Read Committed evita dirty read; Read Uncommitted e il piu permissivo."
+  }
+]

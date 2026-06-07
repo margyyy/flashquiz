@@ -1,0 +1,78 @@
+[
+  {
+    "question": "Perche una query SQL deve essere ottimizzata?",
+    "answer": "SQL e dichiarativo: il DBMS deve generare un piano procedurale equivalente e scegliere quello meno costoso in base a indici, metodi d'accesso, buffer e statistiche."
+  },
+  {
+    "question": "Quali sono le fasi della compilazione di una query?",
+    "answer": "Analisi lessicale e sintattica, traduzione algebrica, ottimizzazione algebrica, ottimizzazione dipendente dai metodi di accesso e generazione del piano/codice."
+  },
+  {
+    "question": "Che cosa fanno selection push e projection push?",
+    "answer": "Anticipano selezioni e proiezioni per ridurre prima possibile numero di tuple e attributi trasportati nelle operazioni successive."
+  },
+  {
+    "question": "Qual e il costo di una scansione sequenziale di R?",
+    "answer": "NP(R), cioe il numero di pagine dati della relazione R."
+  },
+  {
+    "question": "Quando serve l'ordinamento nel piano di esecuzione?",
+    "answer": "Per ORDER BY, DISTINCT, GROUP BY e per operatori come merge-scan join quando gli input devono essere ordinati."
+  },
+  {
+    "question": "Come funziona lo Z-way Sort-Merge?",
+    "answer": "Si producono run ordinate con sort interno e poi si fondono Z run alla volta usando buffer di input e un buffer di output fino a ottenere una sola run ordinata."
+  },
+  {
+    "question": "Qual e il costo indicativo del 2-way Sort-Merge negli appunti?",
+    "answer": "Circa 2 * NP * (log2(NP) + 1), contando lettura e scrittura delle pagine nella fase di sort e nei passi di merge."
+  },
+  {
+    "question": "Quale indice si usa per una selezione A = v?",
+    "answer": "Si puo usare hash oppure B+-tree. Hash e spesso migliore per uguaglianza puntuale; B+-tree resta utilizzabile."
+  },
+  {
+    "question": "Quale indice si usa per una selezione di intervallo A >= v1 AND A <= v2?",
+    "answer": "Si usa un B+-tree sull'attributo A, perche supporta accesso al primo valore e scansione ordinata dell'intervallo. Un hash non e adatto alle range query."
+  },
+  {
+    "question": "Come si gestisce una congiunzione di uguaglianze A = v1 AND B = v2?",
+    "answer": "Si sceglie l'indice sulla condizione piu selettiva e si verifica l'altra condizione sulle tuple/pagine ottenute, salvo disponibilita di indici compositi adatti."
+  },
+  {
+    "question": "Come si gestisce una disgiunzione A = v1 OR B = v2?",
+    "answer": "Se esistono gli indici necessari si possono unire i risultati eliminando duplicati; se manca un indice, spesso serve scansione sequenziale."
+  },
+  {
+    "question": "Come funziona il Nested-Loop Join semplice e qual e il costo base?",
+    "answer": "Per ogni tupla della relazione esterna R si scandisce S. Con buffer minimi il costo e NP(R) + NR(R) * NP(S)."
+  },
+  {
+    "question": "Come funziona il Nested-Loop Join con indice?",
+    "answer": "Per ogni tupla esterna si usa un indice sugli attributi di join della relazione interna, evitando la scansione completa di S."
+  },
+  {
+    "question": "Nel Block Nested-Loop Join quante volte si scandisce la relazione interna S?",
+    "answer": "Una volta per ogni pagina della relazione esterna R. Per questo il costo base e NP(R) + NP(R) * NP(S)."
+  },
+  {
+    "question": "Quando si usa il Merge-Scan Join?",
+    "answer": "Quando il join e un equi-join e gli input sono ordinati sugli attributi di join, fisicamente o tramite indice."
+  },
+  {
+    "question": "Qual e il costo del Merge-Scan Join nel caso migliore?",
+    "answer": "Se entrambe le relazioni sono gia ordinate e lette sequenzialmente, il costo e circa NP(R) + NP(S)."
+  },
+  {
+    "question": "Quando si usa l'Hash Join?",
+    "answer": "Per equi-join su relazioni grandi, senza richiedere input ordinati o indici. Le relazioni sono partizionate con la stessa funzione hash sugli attributi di join."
+  },
+  {
+    "question": "Come sceglie il DBMS il piano finale?",
+    "answer": "Genera piani alternativi variando ordine, accessi e operatori fisici; stima i costi con statistiche del data dictionary e sceglie il piano con costo minimo stimato."
+  },
+  {
+    "question": "Quali statistiche sono usate per stimare i costi?",
+    "answer": "CARD(T), SIZE(T), SIZE(A,T), VAL(A,T), MIN(A,T), MAX(A,T), numero di pagine e profondita degli indici."
+  }
+]
