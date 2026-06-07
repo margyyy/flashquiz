@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import QuizGame from "@/components/QuizGame";
 import { getSet } from "@/lib/data";
 import type { QuizQuestion, StudyItem } from "@/lib/types";
@@ -8,6 +9,7 @@ export const metadata = {
 };
 
 export default async function QuizSetPage({ params }: PageProps<"/quiz/[setId]">) {
+  await connection();
   const { setId } = await params;
   const set = await getSet(setId);
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import FlashcardStudy from "@/components/FlashcardStudy";
 import { getSet } from "@/lib/data";
 import type { StudyItem } from "@/lib/types";
@@ -8,6 +9,7 @@ export const metadata = {
 };
 
 export default async function FlashcardStudyPage({ params }: PageProps<"/flashcard/[setId]">) {
+  await connection();
   const { setId } = await params;
   const set = await getSet(setId);
 

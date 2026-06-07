@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getSubjects } from "@/lib/data";
 import { ArrowRight, Layers } from "lucide-react";
 
@@ -7,6 +8,7 @@ export const metadata = {
 };
 
 export default async function StudyPage() {
+  await connection();
   const subjects = await getSubjects();
 
   return (

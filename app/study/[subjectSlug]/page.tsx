@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getSubject } from "@/lib/data";
 import { ArrowLeft, ArrowRight, BookOpen, ListChecks } from "lucide-react";
 
 export default async function SubjectPage({ params }: PageProps<"/study/[subjectSlug]">) {
+  await connection();
   const { subjectSlug } = await params;
   const subject = await getSubject(subjectSlug);
 

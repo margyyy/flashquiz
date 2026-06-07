@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { createSet, createSubject, deleteSet, deleteStudyItem, deleteSubject, unlockAdmin, updateSet, updateSubject } from "@/app/actions";
 import AdminItemForm from "@/components/AdminItemForm";
 import { getSubjects } from "@/lib/data";
@@ -15,6 +16,7 @@ type AdminPageProps = {
 };
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
+  await connection();
   const cookieStore = await cookies();
   const hasAdminAccess = cookieStore.get("plantasia_admin_access")?.value === "ok";
   const { error } = await searchParams;
