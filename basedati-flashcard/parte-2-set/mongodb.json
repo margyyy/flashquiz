@@ -1,0 +1,146 @@
+[
+  {
+    "question": "Su quali due concetti fondamentali si basa l'architettura di MongoDB?",
+    "answer": "Su replicazione e sharding: la replicazione aumenta disponibilita e resilienza, lo sharding distribuisce i dati per scalare orizzontalmente."
+  },
+  {
+    "question": "Che cos'e la replicazione in MongoDB?",
+    "answer": "E la disseminazione di copie identiche degli stessi dati su server diversi per garantire ridondanza, accessibilita e tolleranza ai guasti."
+  },
+  {
+    "question": "Che cos'e lo sharding in MongoDB?",
+    "answer": "E la suddivisione di un dataset grande in porzioni piu piccole memorizzate su server diversi, cosi da distribuire carico, storage e traffico."
+  },
+  {
+    "question": "Che cos'e un replica set?",
+    "answer": "E un insieme di processi mongod che mantengono una copia dello stesso dataset, con un nodo primario e uno o piu secondari."
+  },
+  {
+    "question": "Qual e il ruolo del nodo primario in un replica set?",
+    "answer": "Gestisce le scritture, mantiene l'oplog delle operazioni e fa da riferimento per la replica verso i nodi secondari."
+  },
+  {
+    "question": "Che cosa fanno i nodi secondari?",
+    "answer": "Replicano in modo asincrono le operazioni registrate nell'oplog del primario, mantenendo copie aggiornate del dataset."
+  },
+  {
+    "question": "Che cos'e l'oplog?",
+    "answer": "E il log delle operazioni di scrittura eseguite sul database; i secondari lo leggono per replicare i cambiamenti del primario."
+  },
+  {
+    "question": "Perche le operazioni nell'oplog devono essere idempotenti?",
+    "answer": "Perche la replica deve poter riapplicare le operazioni senza produrre effetti incoerenti anche in presenza di ritardi o ripetizioni."
+  },
+  {
+    "question": "Quando parte un'elezione nel replica set?",
+    "answer": "Quando il primario diventa non raggiungibile, quando cambia la composizione del set o durante l'inizializzazione del replica set."
+  },
+  {
+    "question": "Su quale idea si basa l'elezione del primario?",
+    "answer": "Su un protocollo di consenso ispirato a Raft, con voto dei membri e preferenza per nodi con stato di replica piu aggiornato."
+  },
+  {
+    "question": "Perche in un replica set conviene avere un numero dispari di membri votanti?",
+    "answer": "Per evitare parita nei voti e ridurre il rischio di stallo durante le elezioni."
+  },
+  {
+    "question": "A cosa serve un arbitro in MongoDB?",
+    "answer": "Partecipa alle elezioni ma non conserva dati e non puo diventare primario; serve soprattutto quando ci sono pochi nodi dati."
+  },
+  {
+    "question": "Che cosa sono i nodi nascosti?",
+    "answer": "Sono secondari non accessibili direttamente dai client, usati per compiti specifici come backup e reporting; possono anche essere ritardati."
+  },
+  {
+    "question": "Che cos'e il write concern?",
+    "answer": "E il parametro che definisce quante conferme di scrittura servono prima di considerare conclusa un'operazione."
+  },
+  {
+    "question": "Che significato hanno i parametri w, j e wtimeout?",
+    "answer": "w indica quanti nodi devono confermare la scrittura, j richiede che sia scritta su disco, wtimeout fissa un tempo massimo oltre il quale si segnala errore."
+  },
+  {
+    "question": "Qual e il trade-off di un write concern alto come majority?",
+    "answer": "Aumenta affidabilita e persistenza percepita, ma anche la latenza della scrittura."
+  },
+  {
+    "question": "Che cos'e il read concern?",
+    "answer": "E il livello che definisce quale stato dei dati puo essere letto, bilanciando freschezza, consistenza e isolamento."
+  },
+  {
+    "question": "Quali read concern bisogna saper distinguere?",
+    "answer": "Local, available, majority, linearizable e snapshot."
+  },
+  {
+    "question": "Differenza essenziale tra local e majority read concern?",
+    "answer": "Local legge il dato piu recente disponibile sul nodo, anche se non ancora confermato dalla maggioranza; majority legge solo dati confermati dalla maggioranza."
+  },
+  {
+    "question": "Quando e utile il read concern snapshot?",
+    "answer": "Nelle transazioni o nelle letture che richiedono una vista coerente dello stato dei dati in un certo istante."
+  },
+  {
+    "question": "Quali sono i componenti principali di un cluster shardato?",
+    "answer": "Gli shard, che conservano i dati, i processi mongos, che instradano le query, e i config server, che mantengono i metadati dello sharding."
+  },
+  {
+    "question": "Che cosa fa mongos?",
+    "answer": "Riceve le query dal client, decide a quali shard inviarle, raccoglie i risultati parziali e costruisce la risposta finale."
+  },
+  {
+    "question": "Che cos'e una shard key?",
+    "answer": "E l'attributo o insieme di attributi usato per distribuire i documenti tra gli shard tramite la suddivisione in chunk."
+  },
+  {
+    "question": "Perche la scelta della shard key e critica?",
+    "answer": "Perche influenza distribuzione del carico, parallelismo, possibilita di range query e rischio di hotspot o chunk sbilanciati."
+  },
+  {
+    "question": "Che differenza c'e tra ranged sharding e hashed sharding?",
+    "answer": "Il ranged sharding usa intervalli continui della shard key ed e buono per range query; l'hashed sharding distribuisce meglio il carico ma e poco efficiente per query di intervallo."
+  },
+  {
+    "question": "Quando una shard key monotona puo essere un problema?",
+    "answer": "Quando i nuovi inserimenti finiscono quasi tutti nello stesso chunk o shard, creando colli di bottiglia."
+  },
+  {
+    "question": "Che cosa sono i chunk nello sharding?",
+    "answer": "Sono partizioni non sovrapposte dei documenti definite da intervalli o hash della shard key."
+  },
+  {
+    "question": "Che cosa fa il balancer?",
+    "answer": "Lavora in background per redistribuire i chunk tra gli shard e mantenere il cluster il piu bilanciato possibile."
+  },
+  {
+    "question": "Che cos'e un jumbo chunk?",
+    "answer": "E un chunk troppo grande che non puo essere suddiviso automaticamente e richiede intervento manuale."
+  },
+  {
+    "question": "Come vengono instradate le query in presenza di sharding?",
+    "answer": "Se la query include la shard key, mongos puo mandarla solo agli shard rilevanti; altrimenti spesso deve fare broadcast verso piu shard."
+  },
+  {
+    "question": "Come cambia l'ordinamento dei risultati con dati shardati?",
+    "answer": "Se lo sort include la shard key, mongos puo combinare i risultati piu facilmente; altrimenti ogni shard ordina localmente e mongos riordina globalmente."
+  },
+  {
+    "question": "Come si interpreta l'atomicita in MongoDB?",
+    "answer": "Le operazioni su un singolo documento sono atomiche anche se coinvolgono sottodocumenti o array; le transazioni multi-documento servono solo quando necessario."
+  },
+  {
+    "question": "Come si descrive la consistenza in MongoDB?",
+    "answer": "MongoDB bilancia disponibilita e prestazioni tra eventual consistency e strong consistency, usando read concern e write concern per modulare il comportamento."
+  },
+  {
+    "question": "Come si ottiene l'isolamento in MongoDB?",
+    "answer": "Combinando sessioni, read concern e write concern; i livelli pratici dipendono dal grado di conferma delle scritture e dalle garanzie sulle letture."
+  },
+  {
+    "question": "Come viene garantita la persistenza in MongoDB?",
+    "answer": "Con meccanismi di write-ahead logging su disco: prima si scrivono le operazioni nel log e poi si applicano, cosi lo stato e recuperabile in caso di guasto."
+  },
+  {
+    "question": "Quali domande teoriche su MongoDB ricorrono negli esami visti?",
+    "answer": "Soprattutto il concetto di sharding: a cosa serve, come si implementa, quali componenti lo gestiscono e perche e utile in un sistema distribuito."
+  }
+]

@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StudyItemKind {
+  FLASHCARD
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+model Subject {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sets        CardSet[]
+
+  @@map("subjects")
+}
+
+model CardSet {
+  id          String      @id @default(cuid())
+  subjectId   String
+  name        String
+  slug        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  items       StudyItem[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId])
+  @@map("card_sets")
+}
+
+model StudyItem {
+  id                   String        @id @default(cuid())
+  setId                String
+  kind                 StudyItemKind
+  prompt               String
+  answer               String?
+  options              Json?
+  correctOptionIndexes Int[]         @default([])
+  allowMultiple        Boolean       @default(false)
+  explanation          String?
+  order                Int           @default(0)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  set                  CardSet       @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@index([setId, order])
+  @@map("study_items")
+}

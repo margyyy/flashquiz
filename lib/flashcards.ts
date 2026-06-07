@@ -1,3 +1,5 @@
+import type { FlashcardCard } from "./types";
+
 // Flashcard data for Reti (subjectId: 19)
 // Sets and cards extracted from aggiorna.json
 
@@ -292,11 +294,25 @@ export function getAllCards() {
 }
 
 // Helper: shuffle array (Fisher-Yates)
-export function shuffle(array) {
+export function shuffle<T>(array: T[]) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+export function toFlashcardItem(card: { id: number; front: string; back: string }, order: number): Omit<FlashcardCard, "setId" | "setName"> {
+  return {
+    id: `reti-card-${card.id}`,
+    kind: "FLASHCARD",
+    prompt: card.front,
+    answer: card.back,
+    options: null,
+    correctOptionIndexes: [],
+    allowMultiple: false,
+    explanation: null,
+    order,
+  };
 }

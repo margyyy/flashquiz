@@ -1,0 +1,202 @@
+[
+  {
+    "question": "Che ruolo ha il buffer in un DBMS?",
+    "answer": "E una zona di memoria centrale che contiene copie di pagine della memoria secondaria per ridurre gli accessi a disco e sfruttare il principio di localita."
+  },
+  {
+    "question": "Cosa fa il gestore del buffer?",
+    "answer": "Carica e salva pagine tra memoria secondaria e memoria centrale, decide quando leggere, scrivere, differire i salvataggi e liberare pagine."
+  },
+  {
+    "question": "Su quale principio si basa il comportamento del buffer?",
+    "answer": "Sul principio di localita: i dati usati di recente hanno alta probabilita di essere usati di nuovo a breve."
+  },
+  {
+    "question": "Che informazione minima si mantiene per ogni pagina del buffer?",
+    "answer": "Il blocco caricato, un contatore di utilizzo della pagina e un bit dirty che indica se la pagina e stata modificata."
+  },
+  {
+    "question": "A cosa serve la primitiva fix nel buffer manager?",
+    "answer": "Richiede l'accesso a un blocco e restituisce un puntatore alla pagina che lo contiene; se il blocco non e nel buffer, lo carica in una pagina libera."
+  },
+  {
+    "question": "Differenza tra force e flush nel buffer manager?",
+    "answer": "Force salva sincronicamente una pagina su disco; flush salva in modo asincrono le pagine dirty e puo liberare spazio nel buffer."
+  },
+  {
+    "question": "Quali proprieta delle transazioni garantisce il gestore dell'affidabilita?",
+    "answer": "Atomicita e persistenza: permette di annullare transazioni non concluse e di mantenere durevoli quelle concluse con commit."
+  },
+  {
+    "question": "Che cos'e il LOG in un DBMS?",
+    "answer": "E un archivio persistente, memorizzato su memoria stabile, che registra in modo sequenziale le operazioni eseguite dalle transazioni e gli eventi di sistema."
+  },
+  {
+    "question": "Quali sono i principali record di transazione nel LOG?",
+    "answer": "Begin B(T), Commit C(T), Abort A(T) e i record di Insert, Delete e Update con before state e/o after state necessari per undo e redo."
+  },
+  {
+    "question": "A cosa servono i record di sistema DUMP e CHECKPOINT?",
+    "answer": "Il DUMP salva una copia consistente della base di dati; il CHECKPOINT delimita un punto da cui ripartire nel recovery registrando le transazioni attive."
+  },
+  {
+    "question": "Che cosa dice la regola WAL?",
+    "answer": "Write-Ahead Logging impone che il record di log sia scritto prima della corrispondente operazione sulla base di dati, cosi l'undo e sempre possibile."
+  },
+  {
+    "question": "Che cosa dice la regola di commit-precedenza?",
+    "answer": "Il commit di una transazione puo avvenire solo dopo che i suoi record di log necessari sono stati scritti in modo persistente."
+  },
+  {
+    "question": "Quando una transazione e considerata committata dal punto di vista del LOG?",
+    "answer": "Quando il record di commit viene scritto in modo sincrono sul log; se il guasto avviene prima si fa undo, se avviene dopo si fa redo."
+  },
+  {
+    "question": "Differenza tra ripresa a caldo e ripresa a freddo?",
+    "answer": "La ripresa a caldo gestisce un guasto di sistema con perdita della memoria centrale; la ripresa a freddo gestisce un guasto di dispositivo e riparte dal dump piu il log."
+  },
+  {
+    "question": "Quali sono i passi essenziali della ripresa a caldo?",
+    "answer": "Si torna all'ultimo checkpoint, si determinano gli insiemi UNDO e REDO, poi si percorre il log in avanti per aggiornarli e infine si eseguono redo e undo."
+  },
+  {
+    "question": "Che cos'e il gestore dei metodi di accesso?",
+    "answer": "E il modulo che esegue il piano prodotto dall'ottimizzatore e traduce le operazioni logiche in accessi fisici a blocchi dati o di indice."
+  },
+  {
+    "question": "Come e organizzata in generale una pagina di dati?",
+    "answer": "Contiene parte utile con i dati e informazioni di controllo, come header, trailer, dizionario di pagina e metadati della struttura fisica."
+  },
+  {
+    "question": "Quando serve il dizionario di pagina?",
+    "answer": "Soprattutto con tuple di lunghezza variabile, per memorizzare gli offset delle tuple e degli attributi e poterle localizzare rapidamente nella pagina."
+  },
+  {
+    "question": "Quali sono le principali strutture primarie di organizzazione dei file?",
+    "answer": "Sequenziali, ad accesso calcolato hash e ad albero; nel materiale le strutture ad albero sono usate soprattutto come strutture secondarie, cioe indici."
+  },
+  {
+    "question": "Vantaggi e svantaggi di un file sequenziale seriale o disordinato?",
+    "answer": "L'inserimento e molto efficiente, ma la ricerca richiede in genere una scansione sequenziale completa."
+  },
+  {
+    "question": "Che cos'e una struttura sequenziale ordinata?",
+    "answer": "E un file sequenziale in cui le tuple sono memorizzate secondo una chiave di ordinamento; aiuta scansioni ordinate e range query ma rende piu costosi gli inserimenti."
+  },
+  {
+    "question": "Che cos'e un indice primario?",
+    "answer": "E un indice costruito su un file sequenziale ordinato in cui la chiave di ricerca coincide con la chiave di ordinamento del file."
+  },
+  {
+    "question": "Differenza tra indice primario denso e sparso?",
+    "answer": "Nel denso c'e un record di indice per ogni valore di chiave presente; nello sparso ci sono meno entry, tipicamente una per blocco o per gruppi ordinati di record."
+  },
+  {
+    "question": "Come avviene la ricerca con indice primario denso?",
+    "answer": "Si cerca nell'indice il valore K e si segue il puntatore al blocco dati corrispondente; il costo base e un accesso all'indice piu uno al blocco dati."
+  },
+  {
+    "question": "Come avviene la ricerca con indice primario sparso?",
+    "answer": "Si cerca il piu grande valore di chiave minore o uguale a K, si segue il puntatore al blocco dati e si completa la ricerca scansionando il blocco."
+  },
+  {
+    "question": "Che cos'e un indice secondario?",
+    "answer": "E un indice la cui chiave di ricerca non coincide con la chiave di ordinamento del file; ogni entry punta in genere a un bucket di puntatori verso le tuple corrispondenti."
+  },
+  {
+    "question": "Perche gli indici secondari sono sempre densi?",
+    "answer": "Perche devono permettere l'accesso a tutti i valori della chiave di ricerca, anche se il file dati non e ordinato secondo quella chiave."
+  },
+  {
+    "question": "Quali sono le caratteristiche essenziali di un B+-tree?",
+    "answer": "E un albero bilanciato memorizzato su pagine di memoria secondaria, con molti figli per nodo, foglie ordinate e collegate tra loro, e costo di ricerca logaritmico."
+  },
+  {
+    "question": "Che cosa contiene un nodo foglia di un B+-tree?",
+    "answer": "Valori di chiave ordinati e puntatori alle tuple, oppure ai bucket di puntatori nel caso di indice secondario, piu un puntatore alla foglia successiva."
+  },
+  {
+    "question": "Come funziona in breve la ricerca in un B+-tree?",
+    "answer": "Si parte dalla radice, si sceglie il puntatore al sottoalbero corretto confrontando la chiave cercata con le chiavi del nodo, e si continua fino alla foglia."
+  },
+  {
+    "question": "Quando avviene uno split in un B+-tree?",
+    "answer": "Quando un inserimento trova un nodo pieno: il nodo viene diviso, si aggiornano padre e puntatori, e lo split puo propagarsi fino alla radice."
+  },
+  {
+    "question": "Quando avviene un merge o una redistribuzione in un B+-tree?",
+    "answer": "Dopo una cancellazione che viola il riempimento minimo di un nodo; si fonde con un fratello o si ridistribuiscono le chiavi, aggiornando il padre."
+  },
+  {
+    "question": "Che cos'e una struttura hash per accesso ai dati?",
+    "answer": "E una struttura ad accesso calcolato in cui una funzione hash mappa la chiave in un bucket, favorendo ricerche puntuali molto rapide."
+  },
+  {
+    "question": "Che cosa sono le collisioni nell'hashing e come si gestiscono?",
+    "answer": "Sono casi in cui chiavi diverse finiscono nello stesso bucket; si gestiscono con bucket di overflow o tecniche equivalenti, ma le prestazioni peggiorano."
+  },
+  {
+    "question": "Quando conviene hash e quando conviene B+-tree?",
+    "answer": "Hash conviene per ricerche di uguaglianza; B+-tree conviene per range query, scansioni ordinate e scenari in cui servono inserimenti e cancellazioni senza ricostruire l'indice."
+  },
+  {
+    "question": "Che cos'e uno schedule?",
+    "answer": "E una sequenza di operazioni di piu transazioni concorrenti che preserva l'ordine interno delle operazioni di ciascuna transazione."
+  },
+  {
+    "question": "Differenza tra schedule seriale e schedule serializzabile?",
+    "answer": "Uno schedule seriale non interleava le transazioni; uno schedule serializzabile puo essere concorrente ma ha un effetto equivalente a qualche schedule seriale."
+  },
+  {
+    "question": "Che cos'e la view-equivalenza?",
+    "answer": "Due schedule sono view-equivalenti se preservano le stesse relazioni legge-da e le stesse scritture finali per ogni dato."
+  },
+  {
+    "question": "Che cos'e la conflict-equivalenza?",
+    "answer": "Due schedule sono conflict-equivalenti se hanno le stesse operazioni e ogni coppia di operazioni in conflitto compare nello stesso ordine in entrambi."
+  },
+  {
+    "question": "Quali operazioni sono in conflitto?",
+    "answer": "Operazioni di transazioni diverse sulla stessa risorsa in cui almeno una e una scrittura: read-write, write-read e write-write."
+  },
+  {
+    "question": "Come si verifica se uno schedule e CSR?",
+    "answer": "Si costruisce il grafo dei conflitti con un nodo per transazione e un arco ti -> tj se un conflitto forza quell'ordine; lo schedule e CSR se il grafo e aciclico."
+  },
+  {
+    "question": "Qual e la relazione tra CSR e VSR?",
+    "answer": "CSR e un sottoinsieme proprio di VSR: ogni schedule conflict-serializzabile e anche view-serializzabile, ma non vale il viceversa."
+  },
+  {
+    "question": "Che cosa impone la regola 2PL?",
+    "answer": "Una transazione non puo acquisire nuovi lock dopo averne rilasciato uno; c'e quindi una fase growing e una fase shrinking."
+  },
+  {
+    "question": "Che differenza c'e tra 2PL e 2PL stretto?",
+    "answer": "Nel 2PL stretto i lock sono rilasciati solo dopo commit o rollback, evitando letture sporche e rendendo il modello adatto ai DBMS reali."
+  },
+  {
+    "question": "Perche 2PL garantisce la conflict-serializzabilita?",
+    "answer": "Perche impedisce riacquisizioni di lock dopo il rilascio; questo esclude cicli nel grafo dei conflitti degli schedule prodotti."
+  },
+  {
+    "question": "Che cos'e un deadlock?",
+    "answer": "E una situazione in cui due o piu transazioni attendono a catena lock detenuti l'una dall'altra e nessuna puo procedere."
+  },
+  {
+    "question": "Come si possono gestire i deadlock?",
+    "answer": "Con timeout, prevenzione o rilevamento tramite wait-for graph e scelta di una vittima da abortire."
+  },
+  {
+    "question": "Che cos'e la starvation nei lock?",
+    "answer": "E l'attesa indefinita di una transazione che non ottiene mai un lock perche altre transazioni continuano a precederla."
+  },
+  {
+    "question": "Quali anomalie di concorrenza bisogna saper riconoscere?",
+    "answer": "Perdita di aggiornamento, lettura inconsistente, lettura sporca, aggiornamento fantasma e inserimento fantasma."
+  },
+  {
+    "question": "Quali moduli del DBMS sono piu spesso richiesti nelle domande teoriche sugli ACID?",
+    "answer": "Gestore dell'affidabilita per atomicita e persistenza, gestore della concorrenza per isolamento e consistenza dell'esecuzione concorrente, buffer manager e metodi di accesso come supporto operativo."
+  }
+]

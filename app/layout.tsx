@@ -1,19 +1,17 @@
-import { Geist } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 
-const geist = Geist({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "Reti",
-  description: "Flashcard e quiz per Reti di Computer",
+export const metadata: Metadata = {
+  title: "Plantasia",
+  description: "Flashcard e quiz organizzati per materia e set.",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className={`${geist.className} antialiased`}>
+      <body>
         <ThemeProvider>
           <Navbar />
           <main>{children}</main>

@@ -1,0 +1,150 @@
+[
+  {
+    "question": "Cosa contiene una pagina dati e come è strutturata internamente?",
+    "answer": "In una pagina sono presenti: 1) INFORMAZIONI DI CONTROLLO DEL FILE SYSTEM: block header e block trailer (ogni pagina coincide con un blocco di memoria di massa). 2) INFORMAZIONI DI CONTROLLO DELLA STRUTTURA FISICA (page header/trailer): identificatore dell'oggetto (tabella, indice, dizionario), puntatori a pagine successive/precedenti, numero di dati utili (tuple), quantità di memoria libera. 3) DIZIONARIO DI PAGINA: contiene puntatori a ciascun dato utile elementare. 4) PARTE UTILE: contiene i dati veri e propri (tuple). 5) BIT DI PARITÀ: verifica la validità dell'informazione nella pagina. Dizionario e parte utile crescono come STACK CONTRAPPOSTI, lasciando libera la parte centrale in uno spazio contiguo."
+  },
+  {
+    "question": "Come funziona il dizionario di una pagina per tuple di lunghezza fissa?",
+    "answer": "Il dizionario non è necessario: si deve solo memorizzare la dimensione delle tuple e l'offset del punto iniziale. Le tuple hanno tutte la stessa dimensione, quindi la posizione di ogni tupla è calcolabile."
+  },
+  {
+    "question": "Come funziona il dizionario di una pagina per tuple di lunghezza variabile?",
+    "answer": "Il dizionario memorizza l'OFFSET di ogni tupla presente nel blocco e di ogni attributo di ogni tupla. Necessario perché valori NULL o di tipo stringa hanno lunghezza variabile."
+  },
+  {
+    "question": "Una tupla può essere distribuita su più pagine?",
+    "answer": "Molti gestori delle pagine NON consentono la separazione di una tupla su più pagine → la dimensione massima di una tupla = dimensione massima dell'area disponibile su un blocco. Alcuni gestori lo consentono (es. PostgreSQL con tecnica TOAST - The Oversized-Attribute Storage Technique)."
+  },
+  {
+    "question": "Quali sono le operazioni fondamentali sulle pagine?",
+    "answer": "INSERIMENTO/AGGIORNAMENTO: se esiste spazio contiguo sufficiente → inserimento semplice; se non esiste spazio contiguo ma sufficiente → riorganizzazione in memoria centrale e inserimento; se non esiste spazio → interazione col file system per allocare nuovi blocchi. CANCELLAZIONE: sempre possibile anche senza riorganizzare. ACCESSO: a una tupla tramite chiave o offset nel dizionario; accesso sequenziale a più tuple; accesso a un attributo tramite offset e lunghezza dopo aver identificato la tupla."
+  },
+  {
+    "question": "Cosa stabilisce la struttura primaria di un file?",
+    "answer": "La struttura primaria di un file stabilisce il criterio secondo il quale sono disposte le tuple all'interno del file presente in memoria di massa. Il livello logico (modello relazionale, tabella) viene mappato sulla struttura primaria in memoria secondaria."
+  },
+  {
+    "question": "Quali sono i tre tipi di strutture primarie per l'organizzazione di file?",
+    "answer": "1) SEQUENZIALI: disposizione consecutiva delle tuple basata su un criterio specifico. 2) AD ACCESSO CALCOLATO (HASH): collocano le tuple in posizioni determinate sulla base di un algoritmo di hash. 3) AD ALBERO: utilizzate soprattutto come strutture secondarie (indici)."
+  },
+  {
+    "question": "Quali sono i tre tipi di struttura sequenziale?",
+    "answer": "1) SERIALE (O DISORDINATA): le tuple sono disposte in base al loro ordine di inserimento. 2) AD ARRAY: le tuple sono disposte come in un array, la posizione dipende dal valore di un campo detto indice (solo tuple a dimensione fissa). 3) ORDINATA: la sequenza dipende dal valore di una chiave di ordinamento (diversa dalla chiave primaria)."
+  },
+  {
+    "question": "Quali sono le caratteristiche della struttura sequenziale SERIALE/DISORDINATA?",
+    "answer": "Le tuple vengono aggiunte nell'ordine di inserimento. INSERIMENTO: molto efficiente, basta un riferimento all'ultimo blocco, richiede 1 solo accesso in memoria secondaria (costo maggiore se si verificano vincoli di integrità). RICERCA: inefficiente, richiede sempre una scansione sequenziale di tutti i record → costo lineare nel numero di blocchi. Si usano strutture secondarie (indici) per migliorare. ELIMINAZIONE: si marcano le tuple come 'cancellate' senza riorganizzazione. MODIFICHE: in loco se possibile, altrimenti cancellazione + inserimento in fondo. Riorganizzazioni periodiche necessarie per l'uso non ottimale dello spazio."
+  },
+  {
+    "question": "Quali sono le caratteristiche della struttura sequenziale AD ARRAY?",
+    "answer": "Possibile solo quando le tuple hanno DIMENSIONE FISSA. Ad ogni file viene assegnato un numero n di blocchi contigui, ciascun blocco ha m 'posizioni' → array di n×m posizioni. Ogni tupla ha un valore numerico i che funge da indice e occupa la i-esima posizione. INSERIMENTO iniziale: l'indice i è ottenuto incrementando un contatore. Inserimento successivo: in una posizione libera o alla fine. CANCELLAZIONI: creano posizioni libere. Quasi mai usata nei DBMS reali perché difficilmente sono soddisfatte le condizioni di applicabilità."
+  },
+  {
+    "question": "Quali sono le caratteristiche della struttura sequenziale ORDINATA?",
+    "answer": "File sequenziale dove le tuple sono ordinate secondo una CHIAVE DI ORDINAMENTO (diversa dalla chiave primaria!). VANTAGGI: efficiente per operazioni che richiedono ordinamento (elenco ordinato, range query, operazioni aggregate). SVANTAGGI: aggiornamenti costosi per mantenere l'ordinamento. Necessarie periodiche riorganizzazioni."
+  },
+  {
+    "question": "Come funziona l'inserimento in una struttura sequenziale ordinata?",
+    "answer": "1) Individuare il blocco B che contiene la tupla che precede, nell'ordine della chiave, la tupla da inserire. 2) Se B ha spazio sufficiente: inserire la nuova tupla in B. 3) Altrimenti: si aggiunge un nuovo blocco (OVERFLOW PAGE) e si inserisce la tupla nel nuovo blocco, aggiustando la catena di puntatori."
+  },
+  {
+    "question": "Come funziona la cancellazione e la riorganizzazione in un file sequenziale?",
+    "answer": "CANCELLAZIONE: 1) Individuare il blocco B che contiene la tupla. 2) Cancellare la tupla da B. 3) Aggiustare la catena di puntatori. RIORGANIZZAZIONE periodica: si assegnano le tuple ai blocchi in base ad opportuni coefficienti di riempimento, riaggiustando i puntatori per mantenere l'ordinamento e recuperare spazio frammentato."
+  },
+  {
+    "question": "Cosa sono gli indici e a cosa servono?",
+    "answer": "Sono strutture ausiliarie (strutture di accesso ai dati) che aumentano le prestazioni degli accessi alle tuple memorizzate nelle strutture fisiche (file sequenziale). Velocizzano l'accesso casuale via CHIAVE DI RICERCA (insieme di attributi utilizzati dall'indice nella ricerca)."
+  },
+  {
+    "question": "Cos'è un INDICE PRIMARIO? DESCRIVI LE DUE VARIANTI.",
+    "answer": "Un indice in cui la chiave di ordinamento del file sequenziale COINCIDE con la chiave di ricerca. Ogni record contiene una coppia <v_i, p_i>: v_i = valore della chiave di ricerca, p_i = puntatore al primo record nel file sequenziale con chiave v_i. Due varianti: DENSO (per OGNI occorrenza della chiave esiste un record nell'indice) e SPARSO (solo per ALCUNE occorrenze, tipicamente UNA PER BLOCCO)."
+  },
+  {
+    "question": "Come funziona la RICERCA con indice primario DENSO?",
+    "answer": "1) Scansione sequenziale dell'indice per trovare il record (K, p_i) — K è certamente presente nell'indice. 2) Accesso al file attraverso il puntatore p_i. Costo: 1 accesso indice + 1 accesso blocco dati."
+  },
+  {
+    "question": "Come funziona la RICERCA con indice primario SPARSO?",
+    "answer": "K potrebbe NON essere presente nell'indice. 1) Scansione sequenziale dell'indice fino al record (K', p_i) dove K' è il VALORE PIÙ GRANDE CHE SIA MINORE O UGUALE a K. 2) Accesso al file attraverso p_i. 3) Scansione del blocco dati per trovare le tuple con chiave K. Costo: 1 accesso indice + 1 accesso blocco dati."
+  },
+  {
+    "question": "Come funziona l'INSERIMENTO nell'indice primario DENSO vs SPARSO?",
+    "answer": "DENSO: l'inserimento nell'indice avviene SOLO se la tupla inserita nel file ha un valore di chiave K che NON è già presente nell'indice. SPARSO: l'inserimento nell'indice avviene SOLO quando, per effetto dell'inserimento di una nuova tupla, SI AGGIUNGE UN BLOCCO DATI alla struttura; in tutti gli altri casi l'indice rimane invariato."
+  },
+  {
+    "question": "Come funziona la CANCELLAZIONE nell'indice primario DENSO vs SPARSO?",
+    "answer": "DENSO: la cancellazione nell'indice avviene SOLO se la tupla cancellata nel file è L'ULTIMA TUPLA con valore di chiave K. SPARSO: la cancellazione avviene solo quando K è presente nell'indice e il corrispondente blocco viene ELIMINATO; altrimenti, se il blocco sopravvive, va SOSTITUITO K nel record dell'indice con il primo valore K' presente nel blocco."
+  },
+  {
+    "question": "Cos'è un INDICE SECONDARIO e quali sono le sue caratteristiche?",
+    "answer": "Un indice in cui la chiave di ordinamento del file sequenziale è DIVERSA dalla chiave di ricerca. Ogni record dell'indice contiene una coppia <v_i, p_i> dove v_i è il valore della chiave di ricerca e p_i è il puntatore al BUCKET DI PUNTATORI che individuano nel file sequenziale TUTTE le tuple con valore di chiave v_i. Gli indici secondari sono SEMPRE DENSI (un record per ogni valore distinto di chiave presente nel file)."
+  },
+  {
+    "question": "Quali sono le caratteristiche principali del B+-tree?",
+    "answer": "1) Struttura ad albero, ogni nodo è memorizzato in una PAGINA della memoria secondaria. 2) I legami tra nodi sono PUNTATORI A PAGINA. 3) Ogni nodo ha un numero elevato di figli → albero con POCHI LIVELLI e MOLTI NODI FOGLIA. 4) BILANCIATO: la lunghezza dei percorsi radice→foglia è COSTANTE. 5) Inserimenti e cancellazioni NON ALTERANO LE PRESTAZIONI: l'albero si mantiene bilanciato automaticamente."
+  },
+  {
+    "question": "Com'è strutturato un nodo foglia del B+-tree?",
+    "answer": "Con fan-out = n, un nodo foglia contiene fino a (n-1) valori ordinati di chiave e fino a n puntatori. Formato: | p1 | K1 | p2 | ... | pm-1 | Km-1 | pm | con m ≤ n. p_i punta alla prima tupla con chiave K_i (indice primario) OPPURE al bucket di puntatori verso le tuple con chiave K_i (indice secondario). In una variante, il nodo foglia contiene direttamente le tuple (struttura fisica integrata dati/indice). I nodi foglia sono collegati in una LISTA CONCATENATA."
+  },
+  {
+    "question": "Com'è strutturato un nodo intermedio del B+-tree?",
+    "answer": "Con fan-out = n, un nodo intermedio contiene m' ≤ n valori ordinati di chiave e fino a n puntatori a nodo. p1 punta al sottoalbero con chiavi k < K1. p_i punta al sottoalbero con chiavi k tali che K_{i-1} ≤ k < K_i. p_{m'} punta al sottoalbero con chiavi k ≥ K_{m'-1}."
+  },
+  {
+    "question": "Quali sono i vincoli di riempimento del B+-tree?",
+    "answer": "NODO FOGLIA (fan-out = n): ⌈(n-1)/2⌉ ≤ #chiavi ≤ (n-1). NODO INTERMEDIO (fan-out = n): ⌈n/2⌉ ≤ #puntatori ≤ n. La RADICE è esente dal vincolo di riempimento minimo. Esempio per fan-out=4: 2≤#chiavi≤3 per le foglie, 2≤#puntatori≤4 per i nodi intermedi."
+  },
+  {
+    "question": "Qual è il vincolo di ordinamento tra nodi foglia in un B+-tree?",
+    "answer": "Dati due nodi foglia L_i e L_j con i < j: ∀ K_t ∈ L_i, ∀ K_s ∈ L_j → K_t < K_s. Il puntatore p_m del nodo L_i punta al nodo L_{i+1} se esiste, formando una LISTA CONCATENATA dei nodi foglia che consente la scansione ordinata efficiente."
+  },
+  {
+    "question": "Come funziona l'algoritmo di ricerca nel B+-tree con chiave K?",
+    "answer": "PASSO 1: nel nodo corrente (partendo dalla radice) cercare il più piccolo valore di chiave MAGGIORE di K. Se esiste K_i → seguire il puntatore p_i (sottoalbero con K_{i-1} ≤ k < K_i). Se NON esiste → seguire p_m (sottoalbero con k ≥ K_{m-1}). PASSO 2: se il nodo raggiunto è una FOGLIA → cercare K nel nodo e seguire il puntatore corrispondente verso le tuple. Altrimenti ripetere il Passo 1."
+  },
+  {
+    "question": "Qual è la formula della profondità massima di un B+-tree?",
+    "answer": "$\\text{prof}_{B^+tree} \\leq 1 + \\log_{\\lceil n/2 \\rceil}\\left(\\frac{\\#\\text{valoriChiave}}{\\lceil (n-1)/2 \\rceil}\\right)$ dove n è il fan-out. Dimostrazione: NFmax = #valoriChiave / ⌈(n-1)/2⌉ (massimo numero foglie con riempimento minimo). NLmax = log⌈n/2⌉(NFmax) (massimo numero livelli intermedi). Profondità = 1 + NLmax. La profondità è INDIPENDENTE dal percorso seguito."
+  },
+  {
+    "question": "Come funziona l'inserimento di una chiave K in un B+-tree?",
+    "answer": "PASSO 1: ricerca del nodo foglia NF dove K va inserito. PASSO 2: se K è già presente → indice primario: nessuna azione; indice secondario: aggiornare il bucket di puntatori. Altrimenti: inserire K in NF rispettando l'ordine (indice primario: inserire puntatore alla tupla; indice secondario: inserire nuovo bucket). Se NF è PIENO (n valori chiave già presenti) → eseguire uno SPLIT di NF."
+  },
+  {
+    "question": "Come funziona lo SPLIT di un nodo foglia nel B+-tree?",
+    "answer": "Se NF ha già n valori chiave e non c'è posto per K: 1) Creare DUE nuovi nodi foglia. 2) Inserire i primi ⌈(n-1)/2⌉ valori nel primo nodo. 3) Inserire i rimanenti nel secondo nodo. 4) Inserire nel nodo PADRE un nuovo puntatore per il secondo nodo foglia e aggiustare i valori chiave del padre. 5) Se anche il padre è PIENO (n puntatori) → lo SPLIT si PROPAGA al padre, e così via fino alla radice."
+  },
+  {
+    "question": "Come funziona la cancellazione di una chiave K in un B+-tree?",
+    "answer": "PASSO 1: ricerca del nodo foglia NF dove K va cancellato. PASSO 2: cancellare K da NF insieme al suo puntatore (indice primario: nessuna ulteriore azione; indice secondario: liberare il bucket). Se dopo la cancellazione viene violato il vincolo di riempimento minimo di NF → eseguire un MERGE di NF."
+  },
+  {
+    "question": "Come funziona il MERGE di un nodo foglia nel B+-tree?",
+    "answer": "Se NF ha ⌈(n-1)/2⌉ - 1 valori chiave (sottosoglia): 1) Individuare il nodo FRATELLO ADIACENTE. 2) Se i due nodi insieme hanno ≤ n-1 valori → UNIRE in un unico nodo contenente tutti i valori, togliere un puntatore dal padre, aggiustare le chiavi del padre. 3) Altrimenti (insieme > n-1) → RIDISTRIBUIRE i valori tra i due nodi e aggiustare le chiavi nel padre. 4) Se anche il padre viola il vincolo minimo (meno di ⌈n/2⌉ puntatori) → il MERGE si PROPAGA al padre, fino alla radice."
+  },
+  {
+    "question": "Cos'è una struttura ad accesso calcolato (HASH)?",
+    "answer": "Garantisce un accesso ASSOCIATIVO ai dati: la locazione fisica dei dati dipende dal valore della chiave. Si basa su una funzione di hash h: K → B che mappa i valori della chiave K negli indirizzi dei bucket B. Usa una funzione di FOLDING f: K → Z+ (trasforma le chiavi in interi positivi) e una funzione di HASHING h: Z+ → B (mappa gli interi nei bucket). Una buona funzione di hashing distribuisce in modo UNIFORME e CASUALE i valori nei bucket."
+  },
+  {
+    "question": "Cos'è una collisione nell'hashing e come si gestisce?",
+    "answer": "Una collisione si verifica quando valori di chiave diversi portano allo stesso indirizzo: h(f(K1)) = h(f(K2)) con K1 ≠ K2. Quando un bucket si satura a causa di troppe collisioni, si allocano BUCKET DI OVERFLOW collegati al bucket di base. La ricerca peggiora perché dopo aver individuato il bucket di base potrebbe essere necessario accedere ai bucket di overflow concatenati."
+  },
+  {
+    "question": "Come si calcola il numero di bucket da allocare per un indice hash?",
+    "answer": "$B = \\lceil T / (f \\times F) \\rceil$ dove T = numero tuple previsto, F = fattore di blocco (tuple per blocco), f = fattore di riempimento (frazione di spazio fisico mediamente utilizzata in ciascun blocco). NOTA BENE: cambiare la funzione di hashing dopo che la struttura è stata riempita richiede la RICOSTRUZIONE COMPLETA dell'indice."
+  },
+  {
+    "question": "Come funziona la ricerca di una tupla con chiave K in una struttura hash?",
+    "answer": "1) Calcolare b = h(f(K)) — costo zero (computazione). 2) Accedere al bucket b — costo: 1 accesso a pagina. 3) Accedere alle n tuple tramite i puntatori del bucket — costo: m accessi a pagina (m ≤ n). Inserimento e cancellazione hanno complessità simile alla ricerca, più la gestione degli overflow bucket."
+  },
+  {
+    "question": "Qual è la probabilità di collisione in una struttura hash?",
+    "answer": "Probabilità che uno stesso bucket riceva t chiavi su n inserimenti (distribuzione binomiale): $p(t) = \\binom{n}{t} \\left(\\frac{1}{B}\\right)^t \\left(1 - \\frac{1}{B}\\right)^{n-t}$. Probabilità di avere più di F collisioni (bucket saturo, F = fattore di blocco): $p_K = 1 - \\sum_{i=0}^{F} p(i)$."
+  },
+  {
+    "question": "Confronta B+-tree e Hashing: punti di forza e debolezza di ciascuno.",
+    "answer": "RICERCA SU UGUAGLIANZA (A=cost): Hash = TEMPO COSTANTE; B+-tree = LOGARITMICO. RICERCA SU INTERVALLO (A>c1 AND A<c2): Hash = INEFFICIENTE (scorre tutti i valori del range uno per uno); B+-tree = LOGARITMICO per il primo valore + SCANSIONE dei nodi foglia concatenati. INSERIMENTO/CANCELLAZIONE: Hash = TEMPO COSTANTE + gestione overflow; B+-tree = LOGARITMICO + split/merge. CONCLUSIONE: hash preferibile per ricerche puntuali su uguaglianza; B+-tree superiore per ricerche su intervallo e quando i dati variano frequentemente (non richiede ricostruzione dell'indice)."
+  }
+]

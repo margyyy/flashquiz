@@ -1,3 +1,5 @@
+import type { QuizQuestion } from "./types";
+
 // Quiz questions extracted from RETI-QUIZ screenshots
 // Ordered by filename timestamp (021555 → 023235)
 // Correct answer = most votes, or green-highlighted answer
@@ -624,3 +626,20 @@ export const quizQuestions = [
     correct: 2,
   },
 ];
+
+export function toQuizItem(
+  question: { id: number; question: string; options: string[]; correct: number },
+  order: number,
+): QuizQuestion {
+  return {
+    id: `reti-quiz-${question.id}`,
+    kind: "MULTIPLE_CHOICE",
+    prompt: question.question,
+    answer: question.options[question.correct] ?? null,
+    options: question.options,
+    correctOptionIndexes: [question.correct],
+    allowMultiple: false,
+    explanation: null,
+    order,
+  };
+}
