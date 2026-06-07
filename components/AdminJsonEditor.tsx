@@ -8,6 +8,7 @@ type Props = {
   databaseReady: boolean;
   id: string;
   subjectId?: string;
+  itemIdMap?: string;
   json: string;
   mode: "subject" | "set";
 };
@@ -54,7 +55,7 @@ function highlightJson(json: string) {
   return pieces;
 }
 
-export default function AdminJsonEditor({ databaseReady, id, subjectId, json, mode }: Props) {
+export default function AdminJsonEditor({ databaseReady, id, subjectId, itemIdMap, json, mode }: Props) {
   const action = mode === "set" ? saveSetJson : saveSubjectJson;
   const [state, formAction, pending] = useActionState(action, initialState);
   const [value, setValue] = useState(json);
@@ -71,6 +72,7 @@ export default function AdminJsonEditor({ databaseReady, id, subjectId, json, mo
     <form action={formAction} className="admin-json-form">
       <input type="hidden" name="id" value={id} />
       {subjectId && <input type="hidden" name="subjectId" value={subjectId} />}
+      {itemIdMap && <input type="hidden" name="itemIdMap" value={itemIdMap} />}
       <div className={`admin-json-editor-shell ${mode === "subject" ? "subject" : ""}`}>
         <pre ref={highlightedRef} className="admin-json-highlight" aria-hidden="true">
           {highlightJson(value)}

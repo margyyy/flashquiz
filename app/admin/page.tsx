@@ -45,7 +45,7 @@ function setJson(subject: Subject, set: CardSet) {
       slug: set.slug,
       description: set.description,
       items: set.items.map((item) => ({
-        id: item.id,
+        id: item.order + 1,
         kind: item.kind,
         prompt: item.prompt,
         answer: item.answer,
@@ -57,6 +57,12 @@ function setJson(subject: Subject, set: CardSet) {
     },
     null,
     2,
+  );
+}
+
+function itemIdMap(set: CardSet) {
+  return JSON.stringify(
+    Object.fromEntries(set.items.map((item) => [String(item.order + 1), item.id])),
   );
 }
 
@@ -239,6 +245,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   id={selectedSet.id}
                   subjectId={selectedSetSubject.id}
                   json={setJson(selectedSetSubject, selectedSet)}
+                  itemIdMap={itemIdMap(selectedSet)}
                   mode="set"
                 />
                 <form action={deleteSet} className="admin-json-delete">

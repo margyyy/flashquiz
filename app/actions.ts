@@ -203,6 +203,51 @@ function indexArray(value: unknown, optionCount: number) {
     : [];
 }
 
+function positiveInteger(value: unknown, label: string) {
+  const rawValue = typeof value === "number" ? String(value) : typeof value === "string" ? value.trim() : "";
+  const numericValue = Number.parseInt(rawValue, 10);
+
+  if (!/^[1-9]\d*$/.test(rawValue) || !Number.isInteger(numericValue)) {
+    throw new Error(`${label} deve essere un intero positivo.`);
+  }
+
+  return numericValue;
+}
+
+function parseItemIdMap(input: string) {
+  if (!input) return new Map<number, string>();
+
+  try {
+    const value: unknown = JSON.parse(input);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return new Map<number, string>();
+
+    return new Map(
+      Object.entries(value)
+        .map(([publicId, dbId]) => [Number.parseInt(publicId, 10), dbId])
+        .filter((entry): entry is [number, string] => Number.isInteger(entry[0]) && typeof entry[1] === "string"),
+    );
+  } catch {
+    return new Map<number, string>();
+  }
+}
+
+function validateIncrementalItemIds(items: { publicId: number }[]) {
+  const seen = new Set<number>();
+
+  for (const [index, item] of items.entries()) {
+    if (seen.has(item.publicId)) {
+      throw new Error(`ID item duplicato nel set: ${item.publicId}.`);
+    }
+
+    const expected = index + 1;
+    if (item.publicId !== expected) {
+      throw new Error(`Gli id degli item devono essere incrementali: item ${expected} deve avere id ${expected}.`);
+    }
+
+    seen.add(item.publicId);
+  }
+}
+
 function hasNonEmptyArray(value: unknown) {
   return Array.isArray(value) && value.length > 0;
 }
@@ -258,6 +303,7 @@ function studyItemJsonData(value: unknown, order: number) {
   }
 
   const item = value as Record<string, unknown>;
+  const publicId = positiveInteger(item.id, `Item ${order + 1}: id`);
   const kind = requiredString(item.kind, "kind") as StudyItemKind;
   const prompt = requiredString(item.prompt, "prompt");
   const explanation = optionalString(item.explanation);
@@ -270,7 +316,7 @@ function studyItemJsonData(value: unknown, order: number) {
     assertNoFlashcardQuizFields(item, order);
 
     return {
-      id: optionalString(item.id),
+      publicId,
       data: {
         kind,
         prompt,
@@ -290,7 +336,7 @@ function studyItemJsonData(value: unknown, order: number) {
     const correctOptionIndexes = indexArray(item.correctOptionIndexes, 2);
     const correctIndex = correctOptionIndexes[0] ?? 0;
     return {
-      id: optionalString(item.id),
+      publicId,
       data: {
         kind,
         prompt,
@@ -315,7 +361,7 @@ function studyItemJsonData(value: unknown, order: number) {
   }
 
   return {
-    id: optionalString(item.id),
+    publicId,
     data: {
       kind,
       prompt,
@@ -431,6 +477,7 @@ export async function updateSetJson(formData: FormData) {
   const db = getDb();
   const id = text(formData, "id");
   const json = text(formData, "json");
+  const itemIdMap = parseItemIdMap(text(formData, "itemIdMap"));
   const data = parseJsonObject(json);
   const subjectId = optionalString(data.subjectId) || text(formData, "subjectId");
   const name = requiredString(data.name, "Nome set");
@@ -438,6 +485,7 @@ export async function updateSetJson(formData: FormData) {
   const description = optionalString(data.description);
   const rawItems = Array.isArray(data.items) ? data.items : [];
   const items = rawItems.map((item, index) => studyItemJsonData(item, index));
+  validateIncrementalItemIds(items);
 
   if (!id || !subjectId) throw new Error("Set e materia obbligatori.");
 
@@ -452,7 +500,9 @@ export async function updateSetJson(formData: FormData) {
       select: { id: true },
     });
     const existingIds = new Set(existingItems.map((item) => item.id));
-    const keptIds = items.map((item) => item.id).filter((itemId): itemId is string => Boolean(itemId));
+    const keptIds = items
+      .map((item) => itemIdMap.get(item.publicId))
+      .filter((itemId): itemId is string => typeof itemId === "string" && existingIds.has(itemId));
 
     await tx.studyItem.deleteMany({
       where: {
@@ -462,9 +512,11 @@ export async function updateSetJson(formData: FormData) {
     });
 
     for (const item of items) {
-      if (item.id && existingIds.has(item.id)) {
+      const dbItemId = itemIdMap.get(item.publicId);
+
+      if (dbItemId && existingIds.has(dbItemId)) {
         await tx.studyItem.update({
-          where: { id: item.id },
+          where: { id: dbItemId },
           data: {
             setId: id,
             ...item.data,
@@ -473,7 +525,6 @@ export async function updateSetJson(formData: FormData) {
       } else {
         await tx.studyItem.create({
           data: {
-            ...(item.id ? { id: item.id } : {}),
             setId: id,
             ...item.data,
           },
