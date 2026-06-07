@@ -1,25 +1,76 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { createSet, createSubject, deleteSet, deleteStudyItem, deleteSubject, unlockAdmin, updateSet, updateSubject } from "@/app/actions";
-import AdminItemForm from "@/components/AdminItemForm";
+import {
+  createSet,
+  createSubject,
+  deleteSet,
+  deleteSubject,
+  unlockAdmin,
+} from "@/app/actions";
+import AdminJsonEditor from "@/components/AdminJsonEditor";
 import { getSubjects } from "@/lib/data";
 import { hasDatabaseUrl } from "@/lib/prisma";
-import { Database, KeyRound, Layers, LibraryBig, Plus, Save, Settings, Trash2 } from "lucide-react";
+import type { CardSet, Subject } from "@/lib/types";
+import { Database, FileJson, FolderPlus, KeyRound, Layers, LibraryBig, Plus, Trash2 } from "lucide-react";
 
 export const metadata = {
   title: "Admin - Plantasia",
-  description: "Pannello amministrativo per materie, set e flashcard.",
+  description: "Pannello amministrativo per materie, set, flashcard e quiz.",
 };
 
 type AdminPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ subject?: string; set?: string; error?: string }>;
 };
+
+function subjectJson(subject: Subject) {
+  return JSON.stringify(
+    {
+      id: subject.id,
+      name: subject.name,
+      slug: subject.slug,
+      description: subject.description,
+    },
+    null,
+    2,
+  );
+}
+
+function setJson(subject: Subject, set: CardSet) {
+  return JSON.stringify(
+    {
+      id: set.id,
+      subjectId: subject.id,
+      name: set.name,
+      slug: set.slug,
+      description: set.description,
+      items: set.items.map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        prompt: item.prompt,
+        answer: item.answer,
+        options: item.options,
+        correctOptionIndexes: item.correctOptionIndexes,
+        allowMultiple: item.allowMultiple,
+        explanation: item.explanation,
+      })),
+    },
+    null,
+    2,
+  );
+}
+
+function itemCounts(set: CardSet) {
+  const flashcards = set.items.filter((item) => item.kind === "FLASHCARD").length;
+  const quizzes = set.items.length - flashcards;
+  return `${flashcards} flashcard, ${quizzes} quiz`;
+}
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   await connection();
   const cookieStore = await cookies();
   const hasAdminAccess = cookieStore.get("plantasia_admin_access")?.value === "ok";
-  const { error } = await searchParams;
+  const params = await searchParams;
 
   if (!hasAdminAccess) {
     return (
@@ -31,7 +82,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
           <form action={unlockAdmin} className="admin-form">
             <input name="code" type="password" required placeholder="Codice admin" autoComplete="off" />
-            {error === "1" && <p className="admin-error">Codice non corretto.</p>}
+            {params.error === "1" && <p className="admin-error">Codice non corretto.</p>}
             <button className="primary-button">
               <KeyRound className="h-4 w-4" />
               Entra
@@ -44,18 +95,23 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   const subjects = await getSubjects();
   const databaseReady = hasDatabaseUrl();
-  const sets = subjects.flatMap((subject) =>
-    subject.sets.map((set) => ({ ...set, subjectName: subject.name })),
-  );
-  const setOptions = sets.map((set) => ({ id: set.id, name: set.name, subjectName: set.subjectName }));
+  const selectedSubject = subjects.find((subject) => subject.id === params.subject) ?? subjects[0] ?? null;
+  const selectedSet =
+    selectedSubject?.sets.find((set) => set.id === params.set) ??
+    subjects.flatMap((subject) => subject.sets).find((set) => set.id === params.set) ??
+    null;
+  const selectedSetSubject = selectedSet
+    ? subjects.find((subject) => subject.sets.some((set) => set.id === selectedSet.id)) ?? selectedSubject
+    : selectedSubject;
+  const editorMode = selectedSet ? "set" : selectedSubject ? "subject" : "empty";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] px-4 py-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="section-kicker">Admin</p>
-            <h1 className="page-title">Gestione contenuti</h1>
+            <h1 className="page-title">Editor JSON</h1>
           </div>
           <div className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-muted)]">
             <Database className="h-4 w-4" />
@@ -65,206 +121,159 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         {!databaseReady && (
           <div className="mb-6 rounded-md border border-[var(--warning)] bg-[var(--warning-subtle)] p-4 text-sm text-[var(--text)]">
-            Configura `DATABASE_URL` con la stringa Postgres di Supabase, poi esegui `npm run db:push` e `npm run db:seed` per abilitare la creazione dal pannello.
+            Configura `DATABASE_URL`, poi esegui `npm run db:push` e `npm run db:seed` per salvare dal pannello.
           </div>
         )}
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          <section className="admin-panel">
-            <div className="admin-panel-title">
-              <LibraryBig className="h-4 w-4" />
-              Materia
-            </div>
-            <form action={createSubject} className="admin-form">
-              <input name="name" required placeholder="Nome materia" disabled={!databaseReady} />
-              <input name="slug" placeholder="slug opzionale" disabled={!databaseReady} />
-              <textarea name="description" placeholder="Descrizione" disabled={!databaseReady} />
-              <button disabled={!databaseReady} className="primary-button">
-                <Plus className="h-4 w-4" />
-                Crea materia
-              </button>
-            </form>
-          </section>
+        <div className="admin-workbench">
+          <aside className="admin-sidebar">
+            <details className="admin-panel admin-add-panel">
+              <summary className="admin-add-summary">
+                <FolderPlus className="h-4 w-4" />
+                Aggiungi
+              </summary>
+              <div className="admin-add-body">
+                <form action={createSubject} className="admin-form">
+                  <input name="name" required placeholder="Nuova subject" disabled={!databaseReady} />
+                  <input name="slug" placeholder="slug opzionale" disabled={!databaseReady} />
+                  <textarea name="description" placeholder="Descrizione subject" disabled={!databaseReady} />
+                  <button disabled={!databaseReady} className="primary-button">
+                    <Plus className="h-4 w-4" />
+                    Subject
+                  </button>
+                </form>
 
-          <section className="admin-panel">
-            <div className="admin-panel-title">
-              <Layers className="h-4 w-4" />
-              Set
-            </div>
-            <form action={createSet} className="admin-form">
-              <select name="subjectId" required disabled={!databaseReady}>
-                <option value="">Materia</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </option>
-                ))}
-              </select>
-              <input name="name" required placeholder="Nome set" disabled={!databaseReady} />
-              <input name="slug" placeholder="slug opzionale" disabled={!databaseReady} />
-              <textarea name="description" placeholder="Descrizione" disabled={!databaseReady} />
-              <button disabled={!databaseReady} className="primary-button">
-                <Plus className="h-4 w-4" />
-                Crea set
-              </button>
-            </form>
-          </section>
+                <form action={createSet} className="admin-form admin-inline-create">
+                  <select name="subjectId" required disabled={!databaseReady} defaultValue={selectedSubject?.id ?? ""}>
+                    <option value="">Subject</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input name="name" required placeholder="Nuovo set" disabled={!databaseReady} />
+                  <input name="slug" placeholder="slug opzionale" disabled={!databaseReady} />
+                  <textarea name="description" placeholder="Descrizione set" disabled={!databaseReady} />
+                  <button disabled={!databaseReady} className="secondary-button">
+                    <Plus className="h-4 w-4" />
+                    Set
+                  </button>
+                </form>
+              </div>
+            </details>
 
-          <section className="admin-panel">
-            <div className="admin-panel-title">
-              <Settings className="h-4 w-4" />
-              Item
-            </div>
-            <AdminItemForm databaseReady={databaseReady} sets={setOptions} />
-          </section>
-        </div>
-
-        <section className="mt-8">
-          <p className="section-kicker">Archivio</p>
-          <div className="mt-3 grid gap-4">
-            {subjects.map((subject) => (
-              <details key={subject.id} className="admin-editor admin-subject-detail">
-                <summary className="admin-level-summary">
-                  <span>Materia</span>
-                  <strong>{subject.name}</strong>
-                  <em>
-                    {subject.sets.length} set, {subject.sets.reduce((total, set) => total + set.items.length, 0)} item
-                  </em>
-                </summary>
-
-                <div className="admin-detail-body">
-                  <form action={updateSubject} className="admin-form admin-editor-main">
-                    <input type="hidden" name="id" value={subject.id} />
-                    <div className="admin-editor-grid">
-                      <input name="name" required disabled={!databaseReady} defaultValue={subject.name} aria-label="Nome materia" />
-                      <input name="slug" required disabled={!databaseReady} defaultValue={subject.slug} aria-label="Slug materia" />
-                      <textarea name="description" disabled={!databaseReady} defaultValue={subject.description ?? ""} aria-label="Descrizione materia" />
-                    </div>
-                    <div className="admin-form-actions">
-                      <button disabled={!databaseReady} className="primary-button">
-                        <Save className="h-4 w-4" />
-                        Salva materia
-                      </button>
-                    </div>
-                  </form>
-
-                  <form action={deleteSubject} className="admin-delete-form">
-                    <input type="hidden" name="id" value={subject.id} />
-                    <button disabled={!databaseReady} className="danger-button">
-                      <Trash2 className="h-4 w-4" />
-                      Elimina materia
-                    </button>
-                  </form>
-                </div>
-
-                <div className="admin-nested-list">
-                  {subject.sets.map((set) => {
-                    const flashcards = set.items.filter((item) => item.kind === "FLASHCARD");
-                    const quizzes = set.items.filter((item) => item.kind !== "FLASHCARD");
+            <section className="admin-panel admin-tree-panel">
+              <div className="admin-panel-title">
+                <LibraryBig className="h-4 w-4" />
+                Subject
+              </div>
+              <div className="admin-tree">
+                {subjects.length === 0 ? (
+                  <p className="admin-empty">Nessuna subject.</p>
+                ) : (
+                  subjects.map((subject) => {
+                    const isActiveSubject = selectedSubject?.id === subject.id && !selectedSet;
+                    const isOpenSubject = selectedSubject?.id === subject.id || subject.sets.some((set) => set.id === selectedSet?.id);
 
                     return (
-                      <details key={set.id} className="admin-nested-panel">
-                        <summary className="admin-level-summary">
-                          <span>Set</span>
-                          <strong>{set.name}</strong>
-                          <em>
-                            {flashcards.length} flashcard, {quizzes.length} quiz
-                          </em>
-                        </summary>
+                      <div key={subject.id} className="admin-tree-subject">
+                        <Link
+                          href={`/admin?subject=${subject.id}`}
+                          className={`admin-tree-link ${isActiveSubject ? "active" : ""}`}
+                        >
+                          <LibraryBig className="h-4 w-4" />
+                          <span>{subject.name}</span>
+                          <em>{subject.sets.length}</em>
+                        </Link>
 
-                        <div className="admin-detail-body">
-                          <form action={updateSet} className="admin-form">
-                            <input type="hidden" name="id" value={set.id} />
-                            <select name="subjectId" required disabled={!databaseReady} defaultValue={subject.id}>
-                              {subjects.map((subjectOption) => (
-                                <option key={subjectOption.id} value={subjectOption.id}>
-                                  {subjectOption.name}
-                                </option>
-                              ))}
-                            </select>
-                            <input name="name" required disabled={!databaseReady} defaultValue={set.name} aria-label="Nome set" />
-                            <input name="slug" required disabled={!databaseReady} defaultValue={set.slug} aria-label="Slug set" />
-                            <textarea name="description" disabled={!databaseReady} defaultValue={set.description ?? ""} aria-label="Descrizione set" />
-                            <div className="admin-form-actions">
-                              <button disabled={!databaseReady} className="secondary-button">
-                                <Save className="h-4 w-4" />
-                                Salva set
-                              </button>
-                            </div>
-                          </form>
-
-                          <form action={deleteSet} className="admin-delete-form">
-                            <input type="hidden" name="id" value={set.id} />
-                            <button disabled={!databaseReady} className="danger-button">
-                              <Trash2 className="h-4 w-4" />
-                              Elimina set
-                            </button>
-                          </form>
-                        </div>
-
-                        <div className="admin-items-list">
-                          <div className="admin-item-group">
-                            <h3>Flashcard</h3>
-                            {flashcards.length === 0 ? (
-                              <p className="admin-empty">Nessuna flashcard in questo set.</p>
+                        {isOpenSubject && (
+                          <div className="admin-set-tree">
+                            {subject.sets.length === 0 ? (
+                              <p className="admin-empty compact">Nessun set.</p>
                             ) : (
-                              flashcards.map((item) => (
-                                <details key={item.id} className="admin-item-detail">
-                                  <summary className="admin-level-summary">
-                                    <span>Flashcard</span>
-                                    <strong>{item.prompt}</strong>
-                                    <em>Ordine {item.order + 1}</em>
-                                  </summary>
-                                  <div className="admin-detail-body">
-                                    <AdminItemForm databaseReady={databaseReady} sets={setOptions} item={{ ...item, setId: set.id }} />
-                                    <form action={deleteStudyItem} className="admin-delete-form">
-                                      <input type="hidden" name="id" value={item.id} />
-                                      <button disabled={!databaseReady} className="danger-button">
-                                        <Trash2 className="h-4 w-4" />
-                                        Elimina flashcard
-                                      </button>
-                                    </form>
-                                  </div>
-                                </details>
+                              subject.sets.map((set) => (
+                                <Link
+                                  key={set.id}
+                                  href={`/admin?subject=${subject.id}&set=${set.id}`}
+                                  className={`admin-tree-link set ${selectedSet?.id === set.id ? "active" : ""}`}
+                                >
+                                  <Layers className="h-4 w-4" />
+                                  <span>{set.name}</span>
+                                  <em>{set.items.length}</em>
+                                </Link>
                               ))
                             )}
                           </div>
-
-                          <div className="admin-item-group">
-                            <h3>Quiz</h3>
-                            {quizzes.length === 0 ? (
-                              <p className="admin-empty">Nessun quiz in questo set.</p>
-                            ) : (
-                              quizzes.map((item) => (
-                                <details key={item.id} className="admin-item-detail">
-                                  <summary className="admin-level-summary">
-                                    <span>{item.kind === "TRUE_FALSE" ? "Vero/Falso" : "Quiz"}</span>
-                                    <strong>{item.prompt}</strong>
-                                    <em>Ordine {item.order + 1}</em>
-                                  </summary>
-                                  <div className="admin-detail-body">
-                                    <AdminItemForm databaseReady={databaseReady} sets={setOptions} item={{ ...item, setId: set.id }} />
-                                    <form action={deleteStudyItem} className="admin-delete-form">
-                                      <input type="hidden" name="id" value={item.id} />
-                                      <button disabled={!databaseReady} className="danger-button">
-                                        <Trash2 className="h-4 w-4" />
-                                        Elimina quiz
-                                      </button>
-                                    </form>
-                                  </div>
-                                </details>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </details>
+                        )}
+                      </div>
                     );
-                  })}
+                  })
+                )}
+              </div>
+            </section>
+          </aside>
+
+          <main className="admin-json-box">
+            <div className="admin-json-head">
+              <div>
+                <div className="admin-panel-title">
+                  <FileJson className="h-4 w-4" />
+                  {editorMode === "set" ? "JSON set" : editorMode === "subject" ? "JSON subject" : "JSON"}
                 </div>
-              </details>
-            ))}
-          </div>
-        </section>
+                <p>
+                  {selectedSet && selectedSetSubject
+                    ? `${selectedSetSubject.name} / ${selectedSet.name} - ${itemCounts(selectedSet)}`
+                    : selectedSubject
+                      ? `${selectedSubject.name} - ${selectedSubject.sets.length} set`
+                      : "Crea una subject per iniziare."}
+                </p>
+              </div>
+            </div>
+
+            {selectedSet && selectedSetSubject ? (
+              <>
+                <AdminJsonEditor
+                  key={selectedSet.id}
+                  databaseReady={databaseReady}
+                  id={selectedSet.id}
+                  subjectId={selectedSetSubject.id}
+                  json={setJson(selectedSetSubject, selectedSet)}
+                  mode="set"
+                />
+                <form action={deleteSet} className="admin-json-delete">
+                  <input type="hidden" name="id" value={selectedSet.id} />
+                  <button disabled={!databaseReady} className="danger-button">
+                    <Trash2 className="h-4 w-4" />
+                    Elimina set
+                  </button>
+                </form>
+              </>
+            ) : selectedSubject ? (
+              <>
+                <AdminJsonEditor
+                  key={selectedSubject.id}
+                  databaseReady={databaseReady}
+                  id={selectedSubject.id}
+                  json={subjectJson(selectedSubject)}
+                  mode="subject"
+                />
+                <form action={deleteSubject} className="admin-json-delete">
+                  <input type="hidden" name="id" value={selectedSubject.id} />
+                  <button disabled={!databaseReady} className="danger-button">
+                    <Trash2 className="h-4 w-4" />
+                    Elimina subject
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="admin-json-empty">
+                <FileJson className="h-8 w-8" />
+                <p>Nessun contenuto selezionato.</p>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -48,17 +48,22 @@ function normalizeSubject(subject: {
 export async function getSubjects(): Promise<Subject[]> {
   if (!hasDatabaseUrl() || !prisma) return seedSubjects;
 
-  const subjects = await prisma.subject.findMany({
-    orderBy: { name: "asc" },
-    include: {
-      sets: {
-        orderBy: { name: "asc" },
-        include: { items: { orderBy: { order: "asc" } } },
+  try {
+    const subjects = await prisma.subject.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        sets: {
+          orderBy: { name: "asc" },
+          include: { items: { orderBy: { order: "asc" } } },
+        },
       },
-    },
-  });
+    });
 
-  return subjects.map(normalizeSubject);
+    return subjects.map(normalizeSubject);
+  } catch (error) {
+    console.warn("Database non raggiungibile, uso seed locale.");
+    return seedSubjects;
+  }
 }
 
 export async function getSubject(slug: string): Promise<Subject | null> {
@@ -66,17 +71,22 @@ export async function getSubject(slug: string): Promise<Subject | null> {
     return seedSubjects.find((subject) => subject.slug === slug) ?? null;
   }
 
-  const subject = await prisma.subject.findUnique({
-    where: { slug },
-    include: {
-      sets: {
-        orderBy: { name: "asc" },
-        include: { items: { orderBy: { order: "asc" } } },
+  try {
+    const subject = await prisma.subject.findUnique({
+      where: { slug },
+      include: {
+        sets: {
+          orderBy: { name: "asc" },
+          include: { items: { orderBy: { order: "asc" } } },
+        },
       },
-    },
-  });
+    });
 
-  return subject ? normalizeSubject(subject) : null;
+    return subject ? normalizeSubject(subject) : null;
+  } catch (error) {
+    console.warn("Database non raggiungibile, uso seed locale.");
+    return seedSubjects.find((subject) => subject.slug === slug) ?? null;
+  }
 }
 
 export async function getSet(setId: string): Promise<(CardSet & { subject: Pick<Subject, "id" | "name" | "slug"> }) | null> {
@@ -88,15 +98,24 @@ export async function getSet(setId: string): Promise<(CardSet & { subject: Pick<
     return null;
   }
 
-  const set = await prisma.cardSet.findUnique({
-    where: { id: setId },
-    include: {
-      subject: { select: { id: true, name: true, slug: true } },
-      items: { orderBy: { order: "asc" } },
-    },
-  });
+  try {
+    const set = await prisma.cardSet.findUnique({
+      where: { id: setId },
+      include: {
+        subject: { select: { id: true, name: true, slug: true } },
+        items: { orderBy: { order: "asc" } },
+      },
+    });
 
-  return set ? { ...normalizeSet(set), subject: set.subject } : null;
+    return set ? { ...normalizeSet(set), subject: set.subject } : null;
+  } catch (error) {
+    console.warn("Database non raggiungibile, uso seed locale.");
+    for (const subject of seedSubjects) {
+      const set = subject.sets.find((candidate) => candidate.id === setId || candidate.slug === setId);
+      if (set) return { ...set, subject: { id: subject.id, name: subject.name, slug: subject.slug } };
+    }
+    return null;
+  }
 }
 
 export async function getAllFlashcards() {
