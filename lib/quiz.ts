@@ -625,6 +625,94 @@ export const quizQuestions = [
     ],
     correct: 2,
   },
+  {
+    id: 58,
+    question: "Nell'algoritmo CSMA-CD (collision detection), quando una stazione, ascoltando il canale, rileva una collisione",
+    options: [
+      "Se non sta trasmettendo, rimanda sempre la trasmissione ad un tempo casuale",
+      "Se sta trasmettendo, interrompe la trasmissione e prova ad inviare subito le trame in coda, se ce ne sono",
+      "Se non ha nulla da trasmettere, rimane in ascolto",
+      "Se non ha nulla da trasmettere, non può sapere che c'è una collisione in corso",
+    ],
+    correct: 2,
+  },
+  {
+    id: 59,
+    question: "L'indirizzo hardware (MAC address)",
+    options: [
+      "Potrebbe non essere univoco (più di una stazione ha lo stesso indirizzo)",
+      "Viene assegnato dinamicamente dal DHCP",
+      "È ridondante, visto che l'indirizzo IP è sufficiente ad identificare un host su Internet",
+      "Serve ad identificare univocamente un host o un router su Internet",
+    ],
+    correct: 0, // Green-highlighted
+  },
+  {
+    id: 60,
+    question: "Il protocollo ARP (Address Resolution Protocol)",
+    options: [
+      "Viene usato solo per la consegna diretta",
+      "Viene usato solo per la consegna indiretta",
+      "Dato un indirizzo IP, serve per trovare il corrispondente indirizzo MAC",
+      "Dato un indirizzo MAC, serve per trovare il corrispondente indirizzo IP",
+    ],
+    correct: 2,
+  },
+  {
+    id: 61,
+    question: "In uno switch ci sono due stazioni collegate a due porte:",
+    options: [
+      "Se iniziano a trasmettere contemporaneamente, il CSMA non può evitare la collisione",
+      "Se trasmettono verso la stessa destinazione, ci potrebbe essere collisione",
+      "Ciascuna stazione dovrà comunicare allo switch il proprio MAC",
+      "Per ciascuna stazione lo switch imparerà il corrispondente MAC",
+    ],
+    correct: 3, // Green-highlighted
+  },
+  {
+    id: 62,
+    question: "Nel CSMA, se il ritardo di propagazione (tau) è maggiore del tempo di trama (T)",
+    options: [
+      "L'ascolto del canale deve avvenire per un intervallo almeno pari a tau",
+      "Eventuali collisioni potrebbero non essere percepite",
+      "In caso di collisione, la ritrasmissione deve essere superiore a tau",
+      "In caso di collisione, la ritrasmissione deve essere superiore a T",
+    ],
+    correct: 1,
+  },
+  {
+    id: 63,
+    question: "La delimitazione delle trame con la tecnica \"character count\":",
+    options: [
+      "Non viene usata in presenza di \"byte di flag / bit stuffing\"",
+      "È influenzata dagli errori nel payload (dati trasportati)",
+      "È influenzata dagli errori nel campo character count stesso",
+      "È influenzata dagli errori negli altri campi dell'header",
+    ],
+    correct: 2, // Green-highlighted
+  },
+  {
+    id: 64,
+    question: "La delimitazione delle trame con la tecnica \"byte di flag / bit stuffing\":",
+    options: [
+      "Non viene usata in presenza di \"character count\"",
+      "Non è mai influenzata dagli errori nel payload (dati trasportati) o nei campi dell'header",
+      "Non introduce overhead, ovvero non aggiunge informazione rispetto al pacchetto arrivato dai livelli superiori",
+      "Potrebbe aggiungere dei bit alla trama, anche se questa non contiene la sequenza del byte di flag",
+    ],
+    correct: 3, // Green-highlighted
+  },
+  {
+    id: 65,
+    question: "Nel CSMA-CA (Collision Avoidance) adottato nelle reti Wireless LAN (IEEE 802.11), una stazione:",
+    options: [
+      "Se trasmettendo c'è collisione, estrae sempre un tempo casuale e aspetta prima di ritentare di trasmettere",
+      "Se trova il canale occupato, quando lo percepisce libero, estrae sempre un tempo casuale e aspetta prima di trasmettere",
+      "Se, ascoltando il canale, lo trova libero, trasmette immediatamente",
+      "Essendo \"Collision Avoidance\", le trame trasmesse non potranno subire collisioni",
+    ],
+    correct: 0, // Green-highlighted
+  },
 ];
 
 export function toQuizItem(
