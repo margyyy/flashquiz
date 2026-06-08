@@ -31,6 +31,10 @@ export type ActiveCardState = {
   targetPlayerId: string;
 };
 
+export type RevealState = ActiveCardState & {
+  correct: boolean;
+};
+
 export type GameRoomState = {
   code: string;
   subject: { id: string; name: string; slug: string };
@@ -40,6 +44,8 @@ export type GameRoomState = {
   currentPlayerId: string | null;
   currentResponderId: string | null;
   activeCard: ActiveCardState | null;
+  reveal: RevealState | null;
+  revealUntil: string | null;
   deckSize: number;
   validDeckSizes: number[];
   handCards: GameCard[];

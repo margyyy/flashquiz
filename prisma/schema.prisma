@@ -87,6 +87,8 @@ model GameRoom {
   currentResponderIndex Int             @default(0)
   activeCard            Json?
   activeResponses       Json?
+  reveal                Json?
+  revealUntil           DateTime?
   timerEnabled          Boolean         @default(false)
   timerSeconds          Int             @default(30)
   responderDeadlineAt   DateTime?

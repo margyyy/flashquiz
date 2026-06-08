@@ -1524,6 +1524,60 @@ details[open] > .admin-level-summary::before {
   line-height: 1.6;
 }
 
+.game-reveal {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.game-reveal.correct {
+  background: var(--success-subtle);
+  border-color: color-mix(in srgb, var(--success) 42%, var(--border));
+}
+
+.game-reveal.wrong {
+  background: var(--warning-subtle);
+  border-color: color-mix(in srgb, var(--warning) 42%, var(--border));
+}
+
+.game-reveal > span {
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-reveal h2 {
+  font-size: clamp(1.1rem, 2.2vw, 1.55rem);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.game-reveal-answer {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.8rem;
+}
+
+.game-reveal-answer small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-reveal-answer strong {
+  color: var(--text);
+  line-height: 1.55;
+}
+
 .game-answer-list {
   display: grid;
   gap: 0.65rem;

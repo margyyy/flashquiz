@@ -8,6 +8,7 @@ const OFFER_SIZE = 3;
 const MAX_PLAYERS = 6;
 const MAX_DECK_SIZE = 30;
 const ROOM_TTL_HOURS = 24;
+const REVEAL_SECONDS = 5;
 const MIN_TIMER_SECONDS = 5;
 const MAX_TIMER_SECONDS = 180;
 
@@ -66,6 +67,10 @@ function responderDeadline(room: { timerEnabled: boolean; timerSeconds: number }
   return room.timerEnabled ? new Date(Date.now() + room.timerSeconds * 1000) : null;
 }
 
+function revealUntil() {
+  return new Date(Date.now() + REVEAL_SECONDS * 1000);
+}
+
 function shuffle<T>(items: T[]) {
   const next = [...items];
   for (let index = next.length - 1; index > 0; index -= 1) {
@@ -90,6 +95,17 @@ function activeCardData(value: unknown): { cardId: string; playedById: string; t
   const data = value as Record<string, unknown>;
   return typeof data.cardId === "string" && typeof data.playedById === "string" && typeof data.targetPlayerId === "string"
     ? { cardId: data.cardId, playedById: data.playedById, targetPlayerId: data.targetPlayerId }
+    : null;
+}
+
+function revealData(value: unknown): { cardId: string; playedById: string; targetPlayerId: string; correct: boolean } | null {
+  if (!value || typeof value !== "object") return null;
+  const data = value as Record<string, unknown>;
+  return typeof data.cardId === "string" &&
+    typeof data.playedById === "string" &&
+    typeof data.targetPlayerId === "string" &&
+    typeof data.correct === "boolean"
+    ? { cardId: data.cardId, playedById: data.playedById, targetPlayerId: data.targetPlayerId, correct: data.correct }
     : null;
 }
 
@@ -345,6 +361,8 @@ export async function startDraft(code: string, playerToken: string) {
         pool,
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
+        reveal: Prisma.JsonNull,
+        revealUntil: null,
         responderDeadlineAt: null,
         currentTurnIndex: 0,
         currentResponderIndex: 0,
@@ -395,6 +413,8 @@ export async function draftPick(code: string, playerToken: string, selectedCardI
         currentResponderIndex: 0,
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
+        reveal: Prisma.JsonNull,
+        revealUntil: null,
         responderDeadlineAt: null,
         expiresAt: expiresAt(),
       },
@@ -410,6 +430,7 @@ export async function playCard(code: string, playerToken: string, selectedCardId
     if (!player) throw new GameError("Player non riconosciuto.", 401);
     if (room.status !== "PLAYING") throw new GameError("La partita non e in corso.", 409);
     if (room.activeCard) throw new GameError("C'e gia una carta al centro.", 409);
+    if (room.reveal) throw new GameError("Aspetta la fine del reveal.", 409);
 
     const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
     const activePlayerId = turnOrder[room.currentTurnIndex] ?? turnOrder[0];
@@ -428,6 +449,8 @@ export async function playCard(code: string, playerToken: string, selectedCardId
       data: {
         activeCard: { cardId: selectedCardId, playedById: player.id, targetPlayerId },
         activeResponses: {},
+        reveal: Prisma.JsonNull,
+        revealUntil: null,
         responderDeadlineAt: responderDeadline(room),
         currentResponderIndex: 0,
         expiresAt: expiresAt(),
@@ -501,18 +524,50 @@ async function recordCurrentResponse(
   const active = activeCardData(room.activeCard);
   if (!active) throw new GameError("Non c'e una carta attiva.", 409);
 
-  const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
   if (correct) {
     await tx.gamePlayer.update({ where: { id: responderId }, data: { score: { increment: 1 } } });
   }
 
+  await tx.gameRoom.update({
+    where: { id: room.id },
+    data: {
+      activeCard: Prisma.JsonNull,
+      activeResponses: Prisma.JsonNull,
+      reveal: { ...active, correct },
+      revealUntil: revealUntil(),
+      responderDeadlineAt: null,
+      expiresAt: expiresAt(),
+    },
+  });
+}
+
+export async function advanceReveal(code: string, playerToken: string) {
+  const db = getDb();
+
+  await db.$transaction(async (tx) => {
+    const { room } = await loadRoomForPlayer(tx, code, playerToken);
+    if (room.status !== "PLAYING") throw new GameError("La partita non e in corso.", 409);
+    if (!room.reveal || !room.revealUntil) throw new GameError("Nessun reveal attivo.", 409);
+    if (room.revealUntil.getTime() > Date.now()) throw new GameError("Il reveal non e ancora terminato.", 409);
+
+    await advanceAfterReveal(tx, room);
+  });
+}
+
+async function advanceAfterReveal(tx: Prisma.TransactionClient, room: NonNullable<RoomWithPlayers>) {
+  const reveal = revealData(room.reveal);
+  if (!reveal) throw new GameError("Reveal non valido.", 409);
+
   const nextTargetIndex = room.currentResponderIndex + 1;
-  if (targetAt(turnOrder, active.playedById, nextTargetIndex)) {
+  const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
+  if (targetAt(turnOrder, reveal.playedById, nextTargetIndex)) {
     await tx.gameRoom.update({
       where: { id: room.id },
       data: {
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
+        reveal: Prisma.JsonNull,
+        revealUntil: null,
         currentResponderIndex: nextTargetIndex,
         responderDeadlineAt: null,
         expiresAt: expiresAt(),
@@ -528,6 +583,8 @@ async function recordCurrentResponse(
       status: nextTurnIndex === -1 ? "FINISHED" : "PLAYING",
       activeCard: Prisma.JsonNull,
       activeResponses: Prisma.JsonNull,
+      reveal: Prisma.JsonNull,
+      revealUntil: null,
       responderDeadlineAt: null,
       currentTurnIndex: Math.max(nextTurnIndex, 0),
       currentResponderIndex: 0,
@@ -539,10 +596,11 @@ async function recordCurrentResponse(
 function toRoomState(room: NonNullable<RoomWithPlayers>, selfPlayerId: string | null): GameRoomState {
   const content = cardsArray(room.contentSnapshot);
   const active = activeCardData(room.activeCard);
+  const reveal = revealData(room.reveal);
   const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((player) => player.id);
   const currentPlayerId = room.status === "PLAYING" ? turnOrder[room.currentTurnIndex] ?? null : null;
   const currentResponderId =
-    active?.targetPlayerId ?? (currentPlayerId ? targetAt(turnOrder, currentPlayerId, room.currentResponderIndex) : null);
+    active?.targetPlayerId ?? reveal?.targetPlayerId ?? (currentPlayerId ? targetAt(turnOrder, currentPlayerId, room.currentResponderIndex) : null);
   const self = room.players.find((player) => player.id === selfPlayerId);
 
   return {
@@ -556,6 +614,15 @@ function toRoomState(room: NonNullable<RoomWithPlayers>, selfPlayerId: string | 
     activeCard: active
       ? { card: getCard(content, active.cardId), playedById: active.playedById, targetPlayerId: active.targetPlayerId }
       : null,
+    reveal: reveal
+      ? {
+          card: getCard(content, reveal.cardId),
+          playedById: reveal.playedById,
+          targetPlayerId: reveal.targetPlayerId,
+          correct: reveal.correct,
+        }
+      : null,
+    revealUntil: room.revealUntil?.toISOString() ?? null,
     deckSize: room.deckSize,
     validDeckSizes: validDeckSizesFor(content.length, room.players.length),
     handCards: self ? playerDeck(self).map((id) => getCard(content, id)) : [],

@@ -31,6 +31,8 @@ export default function GameRoomClient({ code }: Props) {
   const activePlayer = useMemo(() => state?.players.find((player) => player.id === state.currentPlayerId) ?? null, [state]);
   const responder = useMemo(() => state?.players.find((player) => player.id === state.currentResponderId) ?? null, [state]);
   const playedBy = useMemo(() => state?.players.find((player) => player.id === state.activeCard?.playedById) ?? null, [state]);
+  const revealPlayer = useMemo(() => state?.players.find((player) => player.id === state?.reveal?.playedById) ?? null, [state]);
+  const revealResponder = useMemo(() => state?.players.find((player) => player.id === state?.reveal?.targetPlayerId) ?? null, [state]);
 
   const timeoutAction = useCallback(async () => {
     if (!stored) return;
@@ -41,6 +43,18 @@ export default function GameRoomClient({ code }: Props) {
       setSelected([]);
     } catch {
       // Another client may have advanced the timeout first.
+    }
+  }, [code, stored]);
+
+  const advanceRevealAction = useCallback(async () => {
+    if (!stored) return;
+    try {
+      await post(`/api/game/rooms/${code}/advance-reveal`, { playerToken: stored.playerToken });
+      const next = await getState(code, stored.playerToken);
+      setState(next);
+      setSelected([]);
+    } catch {
+      // Another client may have advanced the reveal first.
     }
   }, [code, stored]);
 
@@ -88,6 +102,15 @@ export default function GameRoomClient({ code }: Props) {
     const interval = window.setInterval(tick, 250);
     return () => window.clearInterval(interval);
   }, [state?.timerEnabled, state?.responderDeadlineAt, state?.activeCard, state?.currentResponderId, stored, timeoutAction]);
+
+  useEffect(() => {
+    if (!state?.reveal || !state.revealUntil) return;
+    const delay = Math.max(0, new Date(state.revealUntil).getTime() - Date.now());
+    const timeout = window.setTimeout(() => {
+      advanceRevealAction();
+    }, delay);
+    return () => window.clearTimeout(timeout);
+  }, [state?.reveal, state?.revealUntil, advanceRevealAction]);
 
   async function join(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -247,6 +270,8 @@ export default function GameRoomClient({ code }: Props) {
             activePlayerName={activePlayer?.username ?? ""}
             responderName={responder?.username ?? ""}
             playedByName={playedBy?.username ?? ""}
+            revealPlayerName={revealPlayer?.username ?? ""}
+            revealResponderName={revealResponder?.username ?? ""}
             selected={selected}
             setSelected={setSelected}
             busy={busy}
@@ -301,6 +326,8 @@ function PlayingView({
   activePlayerName,
   responderName,
   playedByName,
+  revealPlayerName,
+  revealResponderName,
   selected,
   setSelected,
   busy,
@@ -313,6 +340,8 @@ function PlayingView({
   activePlayerName: string;
   responderName: string;
   playedByName: string;
+  revealPlayerName: string;
+  revealResponderName: string;
   selected: number[];
   setSelected: (value: number[]) => void;
   busy: boolean;
@@ -321,6 +350,7 @@ function PlayingView({
   remainingSeconds: number | null;
 }) {
   const card = state.activeCard?.card ?? null;
+  const reveal = state.reveal;
 
   function toggle(card: GameCard, index: number) {
     if (!card.allowMultiple) {
@@ -328,6 +358,24 @@ function PlayingView({
       return;
     }
     setSelected(selected.includes(index) ? selected.filter((item) => item !== index) : [...selected, index]);
+  }
+
+  if (reveal) {
+    return (
+      <section className="game-panel">
+        <p className="section-kicker">
+          {revealPlayerName} contro {revealResponderName}
+        </p>
+        <div className={`game-reveal ${reveal.correct ? "correct" : "wrong"}`}>
+          <span>{reveal.correct ? "Risposta corretta" : "Risposta mancata"}</span>
+          <h2>{reveal.card.prompt}</h2>
+          <div className="game-reveal-answer">
+            <small>Risposta corretta</small>
+            <strong>{formatCorrectAnswer(reveal.card)}</strong>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   if (!card) {
@@ -447,6 +495,13 @@ function modeLabel(mode: GameRoomState["mode"]) {
 
 function timerLabel(state: GameRoomState) {
   return state.timerEnabled ? `Timer ${state.timerSeconds}s` : "Timer off";
+}
+
+function formatCorrectAnswer(card: GameCard) {
+  if (card.kind === "FLASHCARD") return card.answer ?? "";
+  return card.correctOptionIndexes
+    .map((index) => `${optionLetters[index]}. ${card.options?.[index] ?? ""}`)
+    .join("; ");
 }
 
 function loadToken(code: string): StoredPlayer | null {
