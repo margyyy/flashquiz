@@ -7,7 +7,7 @@ const DEFAULT_DECK_SIZE = 8;
 const OFFER_SIZE = 3;
 const MAX_PLAYERS = 6;
 const MAX_DECK_SIZE = 30;
-const ROOM_TTL_HOURS = 24;
+const ROOM_TTL_HOURS = 5;
 const REVEAL_SECONDS = 5;
 const MIN_TIMER_SECONDS = 5;
 const MAX_TIMER_SECONDS = 180;
@@ -139,6 +139,10 @@ function assertPlayer(room: NonNullable<RoomWithPlayers>, playerToken: string) {
 async function loadRoomForPlayer(db: GameDb, code: string, playerToken?: string) {
   const room = await findRoom(db, code);
   if (!room) throw new GameError("Room non trovata.", 404);
+  if (room.expiresAt.getTime() < Date.now()) {
+    await db.gameRoom.delete({ where: { id: room.id } });
+    throw new GameError("Room scaduta.", 410);
+  }
   assertRoom(room);
   const player = playerToken ? assertPlayer(room, playerToken) : null;
   return { room, player };
@@ -322,6 +326,16 @@ export async function setDeckSize(code: string, playerToken: string, deckSize: n
     }
 
     await tx.gameRoom.update({ where: { id: room.id }, data: { deckSize, expiresAt: expiresAt() } });
+  });
+}
+
+export async function closeGameRoom(code: string, playerToken: string) {
+  const db = getDb();
+
+  await db.$transaction(async (tx) => {
+    const { room, player } = await loadRoomForPlayer(tx, code, playerToken);
+    if (room.hostPlayerId !== player?.id) throw new GameError("Solo il creatore puo chiudere la sessione.", 403);
+    await tx.gameRoom.delete({ where: { id: room.id } });
   });
 }
 
@@ -576,10 +590,15 @@ async function advanceAfterReveal(tx: Prisma.TransactionClient, room: NonNullabl
   }
 
   const nextTurnIndex = nextPlayerWithCards(room.players, turnOrder, room.currentTurnIndex);
+  if (nextTurnIndex === -1) {
+    await tx.gameRoom.delete({ where: { id: room.id } });
+    return;
+  }
+
   await tx.gameRoom.update({
     where: { id: room.id },
     data: {
-      status: nextTurnIndex === -1 ? "FINISHED" : "PLAYING",
+      status: "PLAYING",
       activeCard: Prisma.JsonNull,
       activeResponses: Prisma.JsonNull,
       reveal: Prisma.JsonNull,

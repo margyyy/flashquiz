@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Clock, Copy, Crown, Play, RefreshCcw, Trophy, X } from "lucide-react";
+import { ArrowLeft, Check, Clock, Copy, Crown, Play, RefreshCcw, StopCircle, Trophy, X } from "lucide-react";
 import type { GameCard, GameCreateResult, GameRoomState } from "@/lib/game/types";
 
 type Props = {
@@ -22,6 +22,7 @@ export default function GameRoomClient({ code }: Props) {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [closed, setClosed] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const timeoutSentFor = useRef<string | null>(null);
@@ -71,7 +72,11 @@ export default function GameRoomClient({ code }: Props) {
           setError("");
         }
       } catch (apiError) {
-        if (alive) setError(apiError instanceof Error ? apiError.message : "Errore di sincronizzazione.");
+        if (alive) {
+          const message = apiError instanceof Error ? apiError.message : "Errore di sincronizzazione.";
+          setError(message);
+          if (message.includes("Room non trovata") || message.includes("Room scaduta")) setClosed(true);
+        }
       }
     }
 
@@ -143,6 +148,20 @@ export default function GameRoomClient({ code }: Props) {
     }
   }
 
+  async function closeSession() {
+    if (!stored) return;
+    setBusy(true);
+    setError("");
+    try {
+      await post(`/api/game/rooms/${code}/close-session`, { playerToken: stored.playerToken });
+      window.localStorage.removeItem(`plantasia-game-${code}`);
+      window.location.href = "/game";
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Chiusura non riuscita.");
+      setBusy(false);
+    }
+  }
+
   if (!stored) {
     return (
       <div className="page-shell game-page">
@@ -163,6 +182,20 @@ export default function GameRoomClient({ code }: Props) {
               Entra
             </button>
           </form>
+        </section>
+      </div>
+    );
+  }
+
+  if (closed) {
+    return (
+      <div className="study-shell">
+        <section className="intro-panel">
+          <p className="section-kicker">Game</p>
+          <h1>Sessione chiusa</h1>
+          <Link href="/game" className="primary-button">
+            Torna alle room
+          </Link>
         </section>
       </div>
     );
@@ -191,6 +224,12 @@ export default function GameRoomClient({ code }: Props) {
           <Copy className="h-4 w-4" />
           {code}
         </button>
+        {me?.isHost && state.status === "PLAYING" && (
+          <button type="button" className="danger-button compact-button" onClick={closeSession} disabled={busy}>
+            <StopCircle className="h-4 w-4" />
+            Chiudi sessione
+          </button>
+        )}
       </div>
 
       <div className="page-header">
@@ -424,7 +463,7 @@ function PlayingView({
         {!isQuiz && isJudge && <p>{card.answer}</p>}
       </div>
 
-      {isQuiz && isResponder && (
+      {isQuiz && (
         <>
           <div className="game-answer-list">
             {(card.options ?? []).map((option, index) => (
@@ -432,16 +471,22 @@ function PlayingView({
                 key={option}
                 type="button"
                 className={selected.includes(index) ? "active" : ""}
-                onClick={() => toggle(card, index)}
+                onClick={() => isResponder && toggle(card, index)}
+                disabled={isResponder && busy}
+                aria-disabled={!isResponder}
               >
                 <span>{optionLetters[index]}</span>
                 {option}
               </button>
             ))}
           </div>
-          <button className="primary-button" disabled={busy || selected.length === 0} onClick={() => onAnswer({ selectedIndexes: selected })}>
-            Conferma
-          </button>
+          {isResponder ? (
+            <button className="primary-button" disabled={busy || selected.length === 0} onClick={() => onAnswer({ selectedIndexes: selected })}>
+              Conferma
+            </button>
+          ) : (
+            <p className="game-help">Stai vedendo il quiz in tempo reale mentre risponde {responderName}.</p>
+          )}
         </>
       )}
 
@@ -458,7 +503,7 @@ function PlayingView({
         </div>
       )}
 
-      {((isQuiz && !isResponder) || (!isQuiz && !isJudge)) && (
+      {!isQuiz && !isJudge && (
         <p className="game-help">In attesa della risposta o della valutazione.</p>
       )}
     </section>
