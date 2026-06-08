@@ -452,7 +452,6 @@ export async function playCard(code: string, playerToken: string, selectedCardId
         reveal: Prisma.JsonNull,
         revealUntil: null,
         responderDeadlineAt: responderDeadline(room),
-        currentResponderIndex: 0,
         expiresAt: expiresAt(),
       },
     });
