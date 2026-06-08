@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
-import { BookOpen, Moon, Settings, Sprout, Sun } from "lucide-react";
+import { BookOpen, Moon, Settings, Sprout, Sun, Trophy } from "lucide-react";
 
 export default function Navbar() {
   const { dark, toggle } = useTheme();
@@ -23,6 +23,10 @@ export default function Navbar() {
           <Link className={`nav-link ${isActive("/study") ? "active" : ""}`} href="/study">
             <BookOpen className="h-4 w-4" />
             Studio
+          </Link>
+          <Link className={`nav-link ${isActive("/game") ? "active" : ""}`} href="/game">
+            <Trophy className="h-4 w-4" />
+            Game
           </Link>
           <Link className={`nav-link ${isActive("/admin") ? "active" : ""}`} href="/admin">
             <Settings className="h-4 w-4" />

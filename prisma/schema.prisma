@@ -12,6 +12,19 @@ enum StudyItemKind {
   TRUE_FALSE
 }
 
+enum GameContentMode {
+  QUIZ
+  FLASHCARD
+  MIXED
+}
+
+enum GameRoomStatus {
+  LOBBY
+  DRAFT
+  PLAYING
+  FINISHED
+}
+
 model Subject {
   id          String    @id @default(cuid())
   name        String
@@ -20,6 +33,7 @@ model Subject {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   sets        CardSet[]
+  gameRooms   GameRoom[]
 
   @@map("subjects")
 }
@@ -57,4 +71,49 @@ model StudyItem {
 
   @@index([setId, order])
   @@map("study_items")
+}
+
+model GameRoom {
+  id                    String          @id @default(cuid())
+  code                  String          @unique
+  subjectId             String
+  mode                  GameContentMode
+  status                GameRoomStatus  @default(LOBBY)
+  hostPlayerId          String?
+  contentSnapshot       Json
+  pool                  Json
+  turnOrder             String[]        @default([])
+  currentTurnIndex      Int             @default(0)
+  currentResponderIndex Int             @default(0)
+  activeCard            Json?
+  activeResponses       Json?
+  expiresAt             DateTime
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  subject               Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  players               GamePlayer[]
+
+  @@index([code])
+  @@index([expiresAt])
+  @@map("game_rooms")
+}
+
+model GamePlayer {
+  id         String   @id @default(cuid())
+  roomId     String
+  username   String
+  tokenHash  String
+  joinOrder  Int
+  score      Int      @default(0)
+  deck       Json     @default("[]")
+  draftOffer Json?
+  draftPicks Int      @default(0)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  room       GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, username])
+  @@index([roomId, joinOrder])
+  @@map("game_players")
 }
