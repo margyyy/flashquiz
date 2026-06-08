@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createGameRoom, GameError, parseMode } from "@/lib/game/server";
+import { createGameRoom, GameError, parseMode, parseTimerSeconds } from "@/lib/game/server";
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +9,8 @@ export async function POST(request: Request) {
       subjectId: typeof data.subjectId === "string" ? data.subjectId : "",
       mode: parseMode(data.mode),
       username: typeof data.username === "string" ? data.username : "",
+      timerEnabled: data.timerEnabled === true,
+      timerSeconds: parseTimerSeconds(data.timerSeconds),
     });
     return NextResponse.json(result);
   } catch (error) {

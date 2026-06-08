@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, Crown, Play, RefreshCcw, Trophy, X } from "lucide-react";
+import { ArrowLeft, Check, Clock, Copy, Crown, Play, RefreshCcw, Trophy, X } from "lucide-react";
 import type { GameCard, GameCreateResult, GameRoomState } from "@/lib/game/types";
 
 type Props = {
@@ -23,12 +23,26 @@ export default function GameRoomClient({ code }: Props) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const timeoutSentFor = useRef<string | null>(null);
 
   const me = useMemo(() => state?.players.find((player) => player.id === state.selfPlayerId) ?? null, [state]);
   const host = useMemo(() => state?.players.find((player) => player.isHost) ?? null, [state]);
   const activePlayer = useMemo(() => state?.players.find((player) => player.id === state.currentPlayerId) ?? null, [state]);
   const responder = useMemo(() => state?.players.find((player) => player.id === state.currentResponderId) ?? null, [state]);
   const playedBy = useMemo(() => state?.players.find((player) => player.id === state.activeCard?.playedById) ?? null, [state]);
+
+  const timeoutAction = useCallback(async () => {
+    if (!stored) return;
+    try {
+      await post(`/api/game/rooms/${code}/timeout`, { playerToken: stored.playerToken });
+      const next = await getState(code, stored.playerToken);
+      setState(next);
+      setSelected([]);
+    } catch {
+      // Another client may have advanced the timeout first.
+    }
+  }, [code, stored]);
 
   useEffect(() => {
     if (!stored) return;
@@ -54,6 +68,26 @@ export default function GameRoomClient({ code }: Props) {
       window.clearInterval(interval);
     };
   }, [code, stored, state?.status]);
+
+  useEffect(() => {
+    if (!stored || !state?.timerEnabled || !state.responderDeadlineAt || !state.activeCard) {
+      timeoutSentFor.current = null;
+      return;
+    }
+
+    const deadlineKey = `${state.activeCard.card.id}-${state.currentResponderId}-${state.responderDeadlineAt}`;
+    const tick = () => {
+      const remaining = Math.ceil((new Date(state.responderDeadlineAt ?? "").getTime() - Date.now()) / 1000);
+      setRemainingSeconds(Math.max(0, remaining));
+      if (remaining <= 0 && timeoutSentFor.current !== deadlineKey) {
+        timeoutSentFor.current = deadlineKey;
+        timeoutAction();
+      }
+    };
+
+    const interval = window.setInterval(tick, 250);
+    return () => window.clearInterval(interval);
+  }, [state?.timerEnabled, state?.responderDeadlineAt, state?.activeCard, state?.currentResponderId, stored, timeoutAction]);
 
   async function join(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,7 +174,7 @@ export default function GameRoomClient({ code }: Props) {
         <p className="section-kicker">{state.subject.name}</p>
         <h1 className="page-title">Room {state.code}</h1>
         <p className="page-subtitle">
-          {modeLabel(state.mode)} · {state.players.length}/6 giocatori · Host: {host?.username ?? "n/d"}
+          {modeLabel(state.mode)} · {timerLabel(state)} · {state.players.length}/6 giocatori · Host: {host?.username ?? "n/d"}
         </p>
       </div>
 
@@ -156,6 +190,7 @@ export default function GameRoomClient({ code }: Props) {
                 {player.username}
               </span>
               <strong>{player.score}</strong>
+              <em>{player.deckCount}</em>
             </div>
           ))}
         </aside>
@@ -164,14 +199,39 @@ export default function GameRoomClient({ code }: Props) {
           <section className="game-panel">
             <p className="section-kicker">Lobby</p>
             <h2>In attesa del draft</h2>
-            <p className="game-help">{state.contentCount} carte disponibili. Servono almeno 2 giocatori per iniziare.</p>
+            <p className="game-help">
+              {state.contentCount} carte disponibili. Le carte per mazzo devono essere multipli di {Math.max(1, state.players.length - 1)}.
+            </p>
             {me?.isHost ? (
-              <button className="primary-button" onClick={() => action("start-draft")} disabled={busy || state.players.length < 2}>
-                <Play className="h-4 w-4" />
-                Inizia draft
-              </button>
+              <div className="game-lobby-controls">
+                <label>
+                  Carte per mazzo
+                  <select
+                    value={state.validDeckSizes.includes(state.deckSize) ? state.deckSize : ""}
+                    onChange={(event) => action("deck-size", { deckSize: Number.parseInt(event.target.value, 10) })}
+                    disabled={busy || state.validDeckSizes.length === 0}
+                  >
+                    {!state.validDeckSizes.includes(state.deckSize) && <option value="">Scegli</option>}
+                    {state.validDeckSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="primary-button"
+                  onClick={() => action("start-draft")}
+                  disabled={busy || state.players.length < 2 || !state.validDeckSizes.includes(state.deckSize)}
+                >
+                  <Play className="h-4 w-4" />
+                  Inizia draft
+                </button>
+              </div>
             ) : (
-              <p className="game-help">Aspetta che il creatore avvii il draft.</p>
+              <p className="game-help">
+                Carte per mazzo: {state.validDeckSizes.includes(state.deckSize) ? state.deckSize : "da scegliere"}. Aspetta che il creatore avvii il draft.
+              </p>
             )}
           </section>
         )}
@@ -190,8 +250,9 @@ export default function GameRoomClient({ code }: Props) {
             selected={selected}
             setSelected={setSelected}
             busy={busy}
-            onPlay={() => action("play-card")}
+            onPlay={(cardId) => action("play-card", { cardId })}
             onAnswer={(body) => action("answer", body)}
+            remainingSeconds={remainingSeconds}
           />
         )}
 
@@ -203,13 +264,13 @@ export default function GameRoomClient({ code }: Props) {
 
 function DraftView({ state, busy, onPick }: { state: GameRoomState; busy: boolean; onPick: (cardId: string) => void }) {
   const me = state.players.find((player) => player.id === state.selfPlayerId);
-  const done = me ? me.draftPicks >= 8 : false;
+  const done = me ? me.draftPicks >= state.deckSize : false;
 
   return (
     <section className="game-panel">
       <p className="section-kicker">Draft</p>
       <h2>Scegli una carta</h2>
-      <p className="game-help">Deck: {me?.draftPicks ?? 0}/8</p>
+      <p className="game-help">Deck: {me?.draftPicks ?? 0}/{state.deckSize}</p>
       {done ? (
         <p className="game-help">Deck completato. Aspetta gli altri giocatori.</p>
       ) : (
@@ -226,7 +287,7 @@ function DraftView({ state, busy, onPick }: { state: GameRoomState; busy: boolea
       <div className="game-draft-progress">
         {state.players.map((player) => (
           <span key={player.id}>
-            {player.username}: {player.draftPicks}/8
+            {player.username}: {player.draftPicks}/{state.deckSize}
           </span>
         ))}
       </div>
@@ -245,6 +306,7 @@ function PlayingView({
   busy,
   onPlay,
   onAnswer,
+  remainingSeconds,
 }: {
   state: GameRoomState;
   meId: string;
@@ -254,8 +316,9 @@ function PlayingView({
   selected: number[];
   setSelected: (value: number[]) => void;
   busy: boolean;
-  onPlay: () => void;
+  onPlay: (cardId: string) => void;
   onAnswer: (body: Record<string, unknown>) => void;
+  remainingSeconds: number | null;
 }) {
   const card = state.activeCard?.card ?? null;
 
@@ -271,12 +334,20 @@ function PlayingView({
     return (
       <section className="game-panel">
         <p className="section-kicker">Turno</p>
-        <h2>{activePlayerName}</h2>
+        <h2>{activePlayerName} contro {responderName}</h2>
         {state.currentPlayerId === meId ? (
-          <button className="primary-button" onClick={onPlay} disabled={busy}>
-            <Play className="h-4 w-4" />
-            Gioca carta
-          </button>
+          <>
+            <p className="game-help">Scegli una carta dalla tua mano per questo avversario.</p>
+            <div className="game-hand-grid">
+              {state.handCards.map((handCard) => (
+                <button key={handCard.id} className="game-card-choice" disabled={busy} onClick={() => onPlay(handCard.id)}>
+                  <span>{handCard.kind === "FLASHCARD" ? "Flashcard" : "Quiz"}</span>
+                  <strong>{handCard.prompt}</strong>
+                  <em>{handCard.setName}</em>
+                </button>
+              ))}
+            </div>
+          </>
         ) : (
           <p className="game-help">Aspetta che giochi la prossima carta.</p>
         )}
@@ -293,6 +364,12 @@ function PlayingView({
       <p className="section-kicker">
         {playedByName} ha giocato · Risponde {responderName}
       </p>
+      {state.timerEnabled && remainingSeconds !== null && (
+        <div className={`game-timer ${remainingSeconds <= 5 ? "danger" : ""}`}>
+          <Clock className="h-4 w-4" />
+          {remainingSeconds}s
+        </div>
+      )}
       <div className="game-active-card">
         <span>{isQuiz ? "Quiz" : "Flashcard"}</span>
         <h2>{card.prompt}</h2>
@@ -321,12 +398,12 @@ function PlayingView({
       )}
 
       {!isQuiz && isJudge && (
-        <div className="button-row">
-          <button className="success-action" disabled={busy} onClick={() => onAnswer({ correct: true })}>
+        <div className="game-judge-actions">
+          <button className="game-judge-button success" disabled={busy} onClick={() => onAnswer({ correct: true })}>
             <Check className="h-5 w-5" />
             La sa
           </button>
-          <button className="danger-action" disabled={busy} onClick={() => onAnswer({ correct: false })}>
+          <button className="game-judge-button danger" disabled={busy} onClick={() => onAnswer({ correct: false })}>
             <X className="h-5 w-5" />
             Non la sa
           </button>
@@ -366,6 +443,10 @@ function modeLabel(mode: GameRoomState["mode"]) {
   if (mode === "QUIZ") return "Solo quiz";
   if (mode === "FLASHCARD") return "Solo flashcard";
   return "Quiz e flashcard";
+}
+
+function timerLabel(state: GameRoomState) {
+  return state.timerEnabled ? `Timer ${state.timerSeconds}s` : "Timer off";
 }
 
 function loadToken(code: string): StoredPlayer | null {

@@ -28,6 +28,7 @@ export type GamePlayerState = {
 export type ActiveCardState = {
   card: GameCard;
   playedById: string;
+  targetPlayerId: string;
 };
 
 export type GameRoomState = {
@@ -39,6 +40,12 @@ export type GameRoomState = {
   currentPlayerId: string | null;
   currentResponderId: string | null;
   activeCard: ActiveCardState | null;
+  deckSize: number;
+  validDeckSizes: number[];
+  handCards: GameCard[];
+  timerEnabled: boolean;
+  timerSeconds: number;
+  responderDeadlineAt: string | null;
   draftOffer: GameCard[];
   players: GamePlayerState[];
   selfPlayerId: string | null;

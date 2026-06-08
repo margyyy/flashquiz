@@ -20,6 +20,8 @@ export default function GameHome({ subjects }: Props) {
   const [joinUsername, setJoinUsername] = useState("");
   const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? "");
   const [mode, setMode] = useState<GameContentMode>("MIXED");
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(30);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +33,13 @@ export default function GameHome({ subjects }: Props) {
     setBusy(true);
     setError("");
     try {
-      const result = await post<GameCreateResult>("/api/game/rooms", { username: createUsername, subjectId, mode });
+      const result = await post<GameCreateResult>("/api/game/rooms", {
+        username: createUsername,
+        subjectId,
+        mode,
+        timerEnabled,
+        timerSeconds,
+      });
       saveToken(result.code, result.playerId, result.playerToken);
       router.push(`/game/${result.code}`);
     } catch (apiError) {
@@ -99,6 +107,26 @@ export default function GameHome({ subjects }: Props) {
                 </button>
               ))}
             </div>
+            <label className="game-toggle-row">
+              <input
+                type="checkbox"
+                checked={timerEnabled}
+                onChange={(event) => setTimerEnabled(event.target.checked)}
+              />
+              Timer risposte
+            </label>
+            {timerEnabled && (
+              <label>
+                Secondi per risposta
+                <input
+                  type="number"
+                  min={5}
+                  max={180}
+                  value={timerSeconds}
+                  onChange={(event) => setTimerSeconds(Number.parseInt(event.target.value, 10) || 30)}
+                />
+              </label>
+            )}
             <p className="game-help">
               {selectedSubject?.name ?? "Materia"}: il sistema usera tutti gli item compatibili della materia.
             </p>

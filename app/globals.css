@@ -1277,6 +1277,18 @@ details[open] > .admin-level-summary::before {
   gap: 0.35rem;
 }
 
+.game-form .game-toggle-row {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0.55rem;
+}
+
+.game-toggle-row input {
+  height: 18px;
+  width: 18px;
+}
+
 .game-code-input {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 1.2rem;
@@ -1356,10 +1368,16 @@ details[open] > .admin-level-summary::before {
   background: var(--surface-2);
   border: 1px solid transparent;
   border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   min-height: 42px;
   padding: 0.55rem 0.65rem;
+}
+
+.game-ranking-row {
+  display: flex;
+  justify-content: space-between;
 }
 
 .game-player-row.self {
@@ -1379,10 +1397,36 @@ details[open] > .admin-level-summary::before {
   color: var(--accent);
 }
 
-.game-card-choice-grid {
+.game-player-row em {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.game-lobby-controls {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 360px;
+}
+
+.game-lobby-controls label {
+  color: var(--text-muted);
+  display: grid;
+  font-size: 0.82rem;
+  font-weight: 750;
+  gap: 0.35rem;
+}
+
+.game-card-choice-grid,
+.game-hand-grid {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.game-hand-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
 .game-card-choice {
@@ -1448,6 +1492,27 @@ details[open] > .admin-level-summary::before {
   padding: 1rem;
 }
 
+.game-timer {
+  align-items: center;
+  background: var(--warning-subtle);
+  border: 1px solid color-mix(in srgb, var(--warning) 42%, var(--border));
+  border-radius: 8px;
+  color: var(--warning);
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 850;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+  min-height: 38px;
+  padding: 0.45rem 0.7rem;
+}
+
+.game-timer.danger {
+  background: var(--danger-subtle);
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+  color: var(--danger);
+}
+
 .game-active-card h2 {
   font-size: clamp(1.1rem, 2.2vw, 1.6rem);
   line-height: 1.45;
@@ -1484,6 +1549,43 @@ details[open] > .admin-level-summary::before {
   height: 30px;
   justify-content: center;
   width: 30px;
+}
+
+.game-judge-actions {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.game-judge-button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 0.98rem;
+  font-weight: 800;
+  gap: 0.55rem;
+  justify-content: center;
+  line-height: 1.15;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.game-judge-button.success {
+  background: var(--success-subtle);
+  border-color: color-mix(in srgb, var(--success) 38%, var(--border));
+  color: var(--success);
+}
+
+.game-judge-button.danger {
+  background: var(--danger-subtle);
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--border));
+  color: var(--danger);
+}
+
+.game-judge-button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 ::-webkit-scrollbar {
@@ -1561,7 +1663,8 @@ details[open] > .admin-level-summary::before {
   .game-home-grid,
   .game-room-grid,
   .game-card-choice-grid,
-  .game-mode-grid {
+  .game-mode-grid,
+  .game-judge-actions {
     grid-template-columns: 1fr;
   }
 

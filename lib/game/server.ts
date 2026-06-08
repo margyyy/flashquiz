@@ -3,10 +3,13 @@ import { Prisma } from "@prisma/client";
 import { prisma, hasDatabaseUrl } from "@/lib/prisma";
 import type { GameCard, GameContentMode, GameRoomState } from "./types";
 
-const DECK_SIZE = 8;
+const DEFAULT_DECK_SIZE = 8;
 const OFFER_SIZE = 3;
 const MAX_PLAYERS = 6;
+const MAX_DECK_SIZE = 30;
 const ROOM_TTL_HOURS = 24;
+const MIN_TIMER_SECONDS = 5;
+const MAX_TIMER_SECONDS = 180;
 
 type GameDb = NonNullable<typeof prisma> | Prisma.TransactionClient;
 
@@ -36,6 +39,12 @@ export function parseMode(value: unknown): GameContentMode {
   throw new GameError("Modalita contenuti non valida.");
 }
 
+export function parseTimerSeconds(value: unknown) {
+  const seconds = Number.parseInt(String(value), 10);
+  if (!Number.isInteger(seconds)) return 30;
+  return Math.min(MAX_TIMER_SECONDS, Math.max(MIN_TIMER_SECONDS, seconds));
+}
+
 function tokenHash(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -51,6 +60,10 @@ function makeCode() {
 
 function expiresAt() {
   return new Date(Date.now() + ROOM_TTL_HOURS * 60 * 60 * 1000);
+}
+
+function responderDeadline(room: { timerEnabled: boolean; timerSeconds: number }) {
+  return room.timerEnabled ? new Date(Date.now() + room.timerSeconds * 1000) : null;
 }
 
 function shuffle<T>(items: T[]) {
@@ -72,19 +85,12 @@ function cardsArray(value: unknown): GameCard[] {
     : [];
 }
 
-function activeCardData(value: unknown): { cardId: string; playedById: string } | null {
+function activeCardData(value: unknown): { cardId: string; playedById: string; targetPlayerId: string } | null {
   if (!value || typeof value !== "object") return null;
   const data = value as Record<string, unknown>;
-  return typeof data.cardId === "string" && typeof data.playedById === "string"
-    ? { cardId: data.cardId, playedById: data.playedById }
+  return typeof data.cardId === "string" && typeof data.playedById === "string" && typeof data.targetPlayerId === "string"
+    ? { cardId: data.cardId, playedById: data.playedById, targetPlayerId: data.targetPlayerId }
     : null;
-}
-
-function responseMap(value: unknown): Record<string, boolean> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, boolean] => typeof entry[1] === "boolean"),
-  );
 }
 
 function getCard(content: GameCard[], cardId: string) {
@@ -155,7 +161,13 @@ async function buildContentSnapshot(db: GameDb, subjectId: string, mode: GameCon
   );
 }
 
-export async function createGameRoom(input: { subjectId: string; mode: GameContentMode; username: string }) {
+export async function createGameRoom(input: {
+  subjectId: string;
+  mode: GameContentMode;
+  username: string;
+  timerEnabled: boolean;
+  timerSeconds: number;
+}) {
   const db = getDb();
   await cleanupExpiredRooms(db);
 
@@ -164,7 +176,7 @@ export async function createGameRoom(input: { subjectId: string; mode: GameConte
   if (username.length > 24) throw new GameError("Username troppo lungo.");
 
   const content = shuffle(await buildContentSnapshot(db, input.subjectId, input.mode));
-  if (content.length < DECK_SIZE + OFFER_SIZE - 1) {
+  if (content.length < OFFER_SIZE) {
     throw new GameError("La materia selezionata non ha abbastanza carte per una partita.");
   }
 
@@ -179,6 +191,8 @@ export async function createGameRoom(input: { subjectId: string; mode: GameConte
           code,
           subjectId: input.subjectId,
           mode: input.mode,
+          timerEnabled: input.timerEnabled,
+          timerSeconds: parseTimerSeconds(input.timerSeconds),
           contentSnapshot: content,
           pool: content.map((card) => card.id),
           expiresAt: expiresAt(),
@@ -245,9 +259,21 @@ function nextPlayerWithCards(players: { id: string; deck: unknown }[], turnOrder
   return -1;
 }
 
-function responderAt(turnOrder: string[], activePlayerId: string, responderIndex: number, responses: Record<string, boolean>) {
-  const responders = turnOrder.filter((id) => id !== activePlayerId && responses[id] === undefined);
-  return responders[responderIndex] ?? null;
+function targetAt(turnOrder: string[], activePlayerId: string, targetIndex: number) {
+  const targets = turnOrder.filter((id) => id !== activePlayerId);
+  return targets[targetIndex] ?? null;
+}
+
+function validDeckSizesFor(contentCount: number, playerCount: number) {
+  if (playerCount < 2) return [];
+  const opponents = playerCount - 1;
+  const maxByContent = Math.floor(contentCount / playerCount) - (OFFER_SIZE - 1);
+  const max = Math.min(MAX_DECK_SIZE, Math.max(0, maxByContent));
+  const options: number[] = [];
+  for (let size = opponents; size <= max; size += opponents) {
+    options.push(size);
+  }
+  return options;
 }
 
 function sameIndexes(a: number[], b: number[]) {
@@ -266,6 +292,23 @@ export async function getGameRoomState(code: string, playerToken?: string) {
   return toRoomState(room, player?.id ?? null);
 }
 
+export async function setDeckSize(code: string, playerToken: string, deckSize: number) {
+  const db = getDb();
+
+  await db.$transaction(async (tx) => {
+    const { room, player } = await loadRoomForPlayer(tx, code, playerToken);
+    if (room.hostPlayerId !== player?.id) throw new GameError("Solo il creatore puo cambiare le carte per mazzo.", 403);
+    if (room.status !== "LOBBY") throw new GameError("Le carte per mazzo si scelgono solo in lobby.", 409);
+
+    const validSizes = validDeckSizesFor(cardsArray(room.contentSnapshot).length, room.players.length);
+    if (!validSizes.includes(deckSize)) {
+      throw new GameError("Numero carte non valido per i giocatori attuali.", 409);
+    }
+
+    await tx.gameRoom.update({ where: { id: room.id }, data: { deckSize, expiresAt: expiresAt() } });
+  });
+}
+
 export async function startDraft(code: string, playerToken: string) {
   const db = getDb();
 
@@ -276,7 +319,11 @@ export async function startDraft(code: string, playerToken: string) {
     if (room.players.length < 2) throw new GameError("Servono almeno 2 giocatori.", 409);
 
     const content = cardsArray(room.contentSnapshot);
-    const requiredCards = room.players.length * DECK_SIZE + OFFER_SIZE - 1;
+    const validSizes = validDeckSizesFor(content.length, room.players.length);
+    if (!validSizes.includes(room.deckSize)) {
+      throw new GameError("Scegli un numero carte valido per i giocatori attuali prima di iniziare.", 409);
+    }
+    const requiredCards = room.players.length * (room.deckSize + OFFER_SIZE - 1);
     if (content.length < requiredCards) {
       throw new GameError(`Servono almeno ${requiredCards} carte per ${room.players.length} giocatori.`, 409);
     }
@@ -298,6 +345,7 @@ export async function startDraft(code: string, playerToken: string) {
         pool,
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
+        responderDeadlineAt: null,
         currentTurnIndex: 0,
         currentResponderIndex: 0,
         turnOrder: room.players.map((item) => item.id),
@@ -314,7 +362,7 @@ export async function draftPick(code: string, playerToken: string, selectedCardI
     const { room, player } = await loadRoomForPlayer(tx, code, playerToken);
     if (!player) throw new GameError("Player non riconosciuto.", 401);
     if (room.status !== "DRAFT") throw new GameError("Non sei nella fase draft.", 409);
-    if (player.draftPicks >= DECK_SIZE) throw new GameError("Deck gia completato.", 409);
+    if (player.draftPicks >= room.deckSize) throw new GameError("Deck gia completato.", 409);
 
     const offer = stringArray(player.draftOffer);
     if (!offer.includes(selectedCardId)) throw new GameError("Carta non presente nell'offerta corrente.", 409);
@@ -325,7 +373,7 @@ export async function draftPick(code: string, playerToken: string, selectedCardI
     const draftPicks = player.draftPicks + 1;
     let nextOffer: string[] | null = null;
 
-    if (draftPicks < DECK_SIZE) {
+    if (draftPicks < room.deckSize) {
       const draw = drawOffer(pool);
       nextOffer = draw.offer;
       pool = draw.pool;
@@ -337,7 +385,7 @@ export async function draftPick(code: string, playerToken: string, selectedCardI
     });
 
     const players = room.players.map((item) => (item.id === player.id ? { ...item, draftPicks, deck } : item));
-    const allDone = players.every((item) => item.draftPicks >= DECK_SIZE);
+    const allDone = players.every((item) => item.draftPicks >= room.deckSize);
     await tx.gameRoom.update({
       where: { id: room.id },
       data: {
@@ -347,13 +395,14 @@ export async function draftPick(code: string, playerToken: string, selectedCardI
         currentResponderIndex: 0,
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
+        responderDeadlineAt: null,
         expiresAt: expiresAt(),
       },
     });
   });
 }
 
-export async function playCard(code: string, playerToken: string) {
+export async function playCard(code: string, playerToken: string, selectedCardId: string) {
   const db = getDb();
 
   await db.$transaction(async (tx) => {
@@ -365,17 +414,21 @@ export async function playCard(code: string, playerToken: string) {
     const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
     const activePlayerId = turnOrder[room.currentTurnIndex] ?? turnOrder[0];
     if (activePlayerId !== player.id) throw new GameError("Non e il tuo turno.", 409);
+    const targetPlayerId = targetAt(turnOrder, player.id, room.currentResponderIndex);
+    if (!targetPlayerId) throw new GameError("Bersaglio non valido.", 409);
 
     const deck = playerDeck(player);
     if (deck.length === 0) throw new GameError("Il tuo deck e vuoto.", 409);
-    const [cardId, ...remainingDeck] = deck;
+    if (!deck.includes(selectedCardId)) throw new GameError("Carta non presente nella tua mano.", 409);
+    const remainingDeck = deck.filter((cardId) => cardId !== selectedCardId);
 
     await tx.gamePlayer.update({ where: { id: player.id }, data: { deck: remainingDeck } });
     await tx.gameRoom.update({
       where: { id: room.id },
       data: {
-        activeCard: { cardId, playedById: player.id },
+        activeCard: { cardId: selectedCardId, playedById: player.id, targetPlayerId },
         activeResponses: {},
+        responderDeadlineAt: responderDeadline(room),
         currentResponderIndex: 0,
         expiresAt: expiresAt(),
       },
@@ -400,64 +453,96 @@ export async function answerCard(
 
     const content = cardsArray(room.contentSnapshot);
     const card = getCard(content, active.cardId);
-    const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
-    const responses = responseMap(room.activeResponses);
-    const responderId = responderAt(turnOrder, active.playedById, room.currentResponderIndex, responses);
+    const responderId = active.targetPlayerId;
     if (!responderId) throw new GameError("Non ci sono rispondenti in attesa.", 409);
 
+    const timedOut = Boolean(room.timerEnabled && room.responderDeadlineAt && room.responderDeadlineAt.getTime() <= Date.now());
     let correct = false;
     if (card.kind === "FLASHCARD") {
       if (player.id !== active.playedById) throw new GameError("Solo chi ha giocato la carta valuta la flashcard.", 403);
-      correct = input.correct === true;
+      correct = !timedOut && input.correct === true;
     } else {
       if (player.id !== responderId) throw new GameError("Non e il tuo turno di risposta.", 409);
       const selected = Array.isArray(input.selectedIndexes)
         ? input.selectedIndexes.filter((index) => Number.isInteger(index))
         : [];
       if (selected.length === 0) throw new GameError("Seleziona una risposta.");
-      correct = sameIndexes(selected, card.correctOptionIndexes);
+      correct = !timedOut && sameIndexes(selected, card.correctOptionIndexes);
     }
 
-    const nextResponses = { ...responses, [responderId]: correct };
-    if (correct) {
-      await tx.gamePlayer.update({ where: { id: responderId }, data: { score: { increment: 1 } } });
-    }
+    await recordCurrentResponse(tx, room, responderId, correct);
+  });
+}
 
-    const stillWaiting = turnOrder.filter((id) => id !== active.playedById && nextResponses[id] === undefined);
-    if (stillWaiting.length > 0) {
-      await tx.gameRoom.update({
-        where: { id: room.id },
-        data: {
-          activeResponses: nextResponses,
-          currentResponderIndex: 0,
-          expiresAt: expiresAt(),
-        },
-      });
-      return;
-    }
+export async function timeoutCurrentResponder(code: string, playerToken: string) {
+  const db = getDb();
 
-    const nextTurnIndex = nextPlayerWithCards(room.players, turnOrder, room.currentTurnIndex);
+  await db.$transaction(async (tx) => {
+    const { room } = await loadRoomForPlayer(tx, code, playerToken);
+    if (room.status !== "PLAYING") throw new GameError("La partita non e in corso.", 409);
+    if (!room.timerEnabled || !room.responderDeadlineAt) throw new GameError("Timer non attivo.", 409);
+    if (room.responderDeadlineAt.getTime() > Date.now()) throw new GameError("Il timer non e ancora scaduto.", 409);
+
+    const active = activeCardData(room.activeCard);
+    if (!active) throw new GameError("Non c'e una carta attiva.", 409);
+    const responderId = active.targetPlayerId;
+    if (!responderId) throw new GameError("Non ci sono rispondenti in attesa.", 409);
+
+    await recordCurrentResponse(tx, room, responderId, false);
+  });
+}
+
+async function recordCurrentResponse(
+  tx: Prisma.TransactionClient,
+  room: NonNullable<RoomWithPlayers>,
+  responderId: string,
+  correct: boolean,
+) {
+  const active = activeCardData(room.activeCard);
+  if (!active) throw new GameError("Non c'e una carta attiva.", 409);
+
+  const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((item) => item.id);
+  if (correct) {
+    await tx.gamePlayer.update({ where: { id: responderId }, data: { score: { increment: 1 } } });
+  }
+
+  const nextTargetIndex = room.currentResponderIndex + 1;
+  if (targetAt(turnOrder, active.playedById, nextTargetIndex)) {
     await tx.gameRoom.update({
       where: { id: room.id },
       data: {
-        status: nextTurnIndex === -1 ? "FINISHED" : "PLAYING",
         activeCard: Prisma.JsonNull,
         activeResponses: Prisma.JsonNull,
-        currentTurnIndex: Math.max(nextTurnIndex, 0),
-        currentResponderIndex: 0,
+        currentResponderIndex: nextTargetIndex,
+        responderDeadlineAt: null,
         expiresAt: expiresAt(),
       },
     });
+    return;
+  }
+
+  const nextTurnIndex = nextPlayerWithCards(room.players, turnOrder, room.currentTurnIndex);
+  await tx.gameRoom.update({
+    where: { id: room.id },
+    data: {
+      status: nextTurnIndex === -1 ? "FINISHED" : "PLAYING",
+      activeCard: Prisma.JsonNull,
+      activeResponses: Prisma.JsonNull,
+      responderDeadlineAt: null,
+      currentTurnIndex: Math.max(nextTurnIndex, 0),
+      currentResponderIndex: 0,
+      expiresAt: expiresAt(),
+    },
   });
 }
 
 function toRoomState(room: NonNullable<RoomWithPlayers>, selfPlayerId: string | null): GameRoomState {
   const content = cardsArray(room.contentSnapshot);
   const active = activeCardData(room.activeCard);
-  const responses = responseMap(room.activeResponses);
   const turnOrder = room.turnOrder.length > 0 ? room.turnOrder : room.players.map((player) => player.id);
   const currentPlayerId = room.status === "PLAYING" ? turnOrder[room.currentTurnIndex] ?? null : null;
-  const currentResponderId = active ? responderAt(turnOrder, active.playedById, room.currentResponderIndex, responses) : null;
+  const currentResponderId =
+    active?.targetPlayerId ?? (currentPlayerId ? targetAt(turnOrder, currentPlayerId, room.currentResponderIndex) : null);
   const self = room.players.find((player) => player.id === selfPlayerId);
 
   return {
@@ -468,7 +553,15 @@ function toRoomState(room: NonNullable<RoomWithPlayers>, selfPlayerId: string | 
     hostPlayerId: room.hostPlayerId,
     currentPlayerId,
     currentResponderId,
-    activeCard: active ? { card: getCard(content, active.cardId), playedById: active.playedById } : null,
+    activeCard: active
+      ? { card: getCard(content, active.cardId), playedById: active.playedById, targetPlayerId: active.targetPlayerId }
+      : null,
+    deckSize: room.deckSize,
+    validDeckSizes: validDeckSizesFor(content.length, room.players.length),
+    handCards: self ? playerDeck(self).map((id) => getCard(content, id)) : [],
+    timerEnabled: room.timerEnabled,
+    timerSeconds: room.timerSeconds,
+    responderDeadlineAt: room.responderDeadlineAt?.toISOString() ?? null,
     draftOffer: self ? stringArray(self.draftOffer).map((id) => getCard(content, id)) : [],
     players: room.players.map((player) => ({
       id: player.id,

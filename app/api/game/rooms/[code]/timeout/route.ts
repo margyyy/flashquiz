@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
-import { GameError, playCard } from "@/lib/game/server";
+import { GameError, timeoutCurrentResponder } from "@/lib/game/server";
 
-export async function POST(request: Request, context: RouteContext<"/api/game/rooms/[code]/play-card">) {
+export async function POST(request: Request, context: RouteContext<"/api/game/rooms/[code]/timeout">) {
   try {
     const { code } = await context.params;
     const body: unknown = await request.json();
-    const data = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
-    await playCard(
-      code,
-      typeof data.playerToken === "string" ? data.playerToken : "",
-      typeof data.cardId === "string" ? data.cardId : "",
-    );
+    const token = body && typeof body === "object" ? (body as Record<string, unknown>).playerToken : "";
+    await timeoutCurrentResponder(code, typeof token === "string" ? token : "");
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof GameError) {
